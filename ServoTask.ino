@@ -136,42 +136,6 @@ static void ServoTask(void* arg) {
         vTaskDelay(5 / portTICK_RATE_MS);
       // hrdCmdServoTest(&srvpkt, 0);
    
-      /*
-           for (angle = 8; angle < 80; angle+=1) {
-        
-             vTaskDelay(5 / portTICK_RATE_MS);
-             servo.write(angle);
-             //delay(15);
-        
-           } 
-       */ 
-/*          
-           for (angle = 80; angle > 8; angle-=1) {
-            vTaskDelay(5 / portTICK_RATE_MS);
-            servo.write(angle);
-             //delay(15);
-        
-           }        
-*/        
-//           vTaskDelay(2 / portTICK_RATE_MS);
-     
-    //   digitalWrite(SPEAKER,LOW);
-     // Turn LED on.
-
-   /*   
-      for(i=0;i<1;i++)
-      {
-      digitalWrite(LED_PIN, HIGH);
-        // Sleep for 200 milliseconds.
-      //vTaskDelay(200L/ portTICK_RATE_MS);
-      vTaskDelay(200L/ portTICK_RATE_MS);
-      // Signal thread 1 to turn LED off.
-     // xSemaphoreGive(sem);
-      digitalWrite(LED_PIN,LOW);
-      // Sleep for 200 milliseconds.
-      vTaskDelay(200L/ portTICK_RATE_MS);
-      }
-      */
     }
     
   }
