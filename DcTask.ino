@@ -37,7 +37,6 @@ ER vDcReverse(PCMD_PKT src)
 CMD_PKT dcpkt;
 static void DcTask(void* arg) {
 	  portBASE_TYPE ret;
-	  int i;
 	  byte val;
 	  
     	 while(1)
@@ -48,6 +47,7 @@ static void DcTask(void* arg) {
                         val = dcpkt.cmdpkt.SubCMD;
                         Haroid_FuncTbl[val](&dcpkt);  
 		        //vTaskDelay(80 / portTICK_RATE_MS);
+                       taskYIELD();
 	  	   } 
 	 } 
 }
