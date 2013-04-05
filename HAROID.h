@@ -4,9 +4,11 @@
 typedef int ER;
 typedef bool BOOL;
 
+#define NULL    0
 #define TRUE    1
 #define FALSE   0
 #define BUFF_SIZE (32)
+
 
 #define E_OK        0       /* Normal Completion */
 
@@ -52,5 +54,9 @@ typedef struct tagSYNC_PKT {
 } SYNC_PKT, *PSYNC_PKT;
 
 
+typedef struct tagPRTCL {
+   char  SendID;
+   char pkt;
+} PROTOCAL_PKT, PPROTOCAL_PKT;
 
 #endif

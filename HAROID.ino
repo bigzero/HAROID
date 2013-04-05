@@ -2,6 +2,7 @@
 #include <SoftwareSerial.h>
 #include "haroid_config.h"  // HAROID configuration
 #include "haroid.h"         // HAROID structure
+#include "Parser.h"
 #include <Servo.h>
 
 
@@ -21,6 +22,7 @@ xQueueHandle hndQueue[TASK_COUNT];
 // decalre a message function.
 void  SendMessage(PCOMMAND_STRUCT cmd);
 portBASE_TYPE ReceiveMessage(int rcvID, PCMD_PKT pkt, int ms);
+portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms);
 portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_PKT pkt, int ms);
 
 
@@ -33,7 +35,7 @@ static void UART_TASK(void* arg) {
   byte toRcv;
   COMMAND_STRUCT cntrCMD;
   CMD_PKT cmdPkt;
-
+  PROTOCAL_PKT ptPkt;
 
   while (1) {
 
@@ -41,6 +43,7 @@ static void UART_TASK(void* arg) {
     {
       char toSend = (char)Serial.read();
       rdbPutbyte(toSend);
+      xQueueSend(hndQueue[PROTOCAL_TASKID],&ptPkt, 20 / portTICK_RATE_MS);
     }
      
     if(wrbGetbyte(&toRcv))
@@ -60,6 +63,7 @@ static void BlueTooth_TASK(void* arg) {
   byte toRcv;
   COMMAND_STRUCT cntrCMD;
   CMD_PKT cmdPkt;
+  PROTOCAL_PKT ptPkt;
 
 
   while (1) {
@@ -68,6 +72,8 @@ static void BlueTooth_TASK(void* arg) {
     {
       char toSend = (char)bluetooth.read();
       rdbPutbyte(toSend);
+      xQueueSend(hndQueue[PROTOCAL_TASKID],&ptPkt, 20 / portTICK_RATE_MS);
+      
     }
      
    if(wrbGetbyte(&toRcv))
@@ -106,16 +112,48 @@ portBASE_TYPE ReceiveMessage(int rcvID, PCMD_PKT pkt, int ms)
    return xQueueReceive(hndQueue[rcvID], (PCMD_PKT) pkt,( ms / portTICK_RATE_MS)); 
 }
 
+/*
+portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms)
+{
+   return xQueueReceive(hndQueue[rcvID], (PPROTOCAL_PKT) pkt,( ms / portTICK_RATE_MS)); 
+}
+*/
+
 portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_PKT pkt, int ms)
 {
    return (portBASE_TYPE)xQueueReceive(hndQueue[rcvID], (PSYNC_PKT) pkt,( portTickType )( ms / portTICK_RATE_MS)); 
 }
 
 
+
 byte cmdPacket[21];   
 COMMAND_STRUCT stCmdPkt;
 SYNC_PKT sync_pkt;
 CMD_PKT cmdPkt;
+CParser parser;
+
+void TEST(void) {
+   byte pk;
+   portBASE_TYPE ret;
+   PROTOCAL_PKT ptpkt; 
+   
+   while(1)
+   {
+        ret = xQueueReceive(hndQueue[PROTOCAL_TASKID],  &ptpkt,( 50 / portTICK_RATE_MS));
+        if(ret == pdTRUE)
+        {
+               parser.Update(pk);  
+         
+        } else
+        {
+          
+        }
+
+      
+     
+   }
+}
+
 
 static void Protocal_TASK(void* arg) {
  byte pk;
@@ -132,15 +170,17 @@ static void Protocal_TASK(void* arg) {
  int post_fix;
  int Status ; 
  int  rcvID;
- int  toSendID;                                             
+ int  toSendID; 
+
+ PROTOCAL_PKT ptpkt; 
  
  while(1)
  {
    //ret = xSemaphoreTake(semaFireReceiveCommand,50 / portTICK_RATE_MS);  //portMAX_DELAY
-   ret = pdTRUE;
+   //ret = ReceiveMessageFromSerial(PROTOCAL_TASKID, &ptpkt, portMAX_DELAY);
+   ret = xQueueReceive(hndQueue[rcvID],  &ptpkt,( 50 / portTICK_RATE_MS));
    if(ret == pdTRUE)
    {
-   
          if(rdbGetbyte(&pk) == TRUE)
          {
            
@@ -359,7 +399,7 @@ void setup() {
   
     hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 10, sizeof( CMD_PKT ) );
     if(hndQueue[BLUTOOTH_TASKID] == 0) {}
-    hndQueue[PROTOCAL_TASKID] = xQueueCreate( 10, sizeof( SYNC_PKT) );
+    hndQueue[PROTOCAL_TASKID] = xQueueCreate( 10, sizeof( PROTOCAL_PKT) );
     if(hndQueue[PROTOCAL_TASKID] == 0) {}
     hndQueue[SERVO_TASKID] = xQueueCreate( 10, sizeof( CMD_PKT ) );
     if(hndQueue[SERVO_TASKID] == 0) {}
