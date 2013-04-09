@@ -16,10 +16,16 @@ ER vCmdIllegal(PCMD_PKT src)
 	return ercd;
 };
 
-
+ER vTest(PCMD_PKT src)
+{
+	int ercd = E_OK;
+        int i;
+        
+   	return ercd;
+};
 
 ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
-  vCmdIllegal,   // 0x00
+  vTest,   // 0x00
   vCmdIllegal,   // 0x01
   vCmdIllegal,   // 0x02
   vCmdIllegal,   // 0x03

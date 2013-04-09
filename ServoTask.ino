@@ -76,6 +76,15 @@ ER vServoForward(PCMD_PKT src)
         servo.write(90);
         //vTaskDelay(50/portTICK_RATE_MS);     
         delay(50);
+        
+        for(i=0;i<5;i++) {
+            pinMode(LED,OUTPUT);
+            digitalWrite(LED, LOW);
+            delay(100);
+            digitalWrite(LED, HIGH);
+            delay(100);
+        }
+        
    for(j=0;j<1;j++)
    {   
        for(i=50;i<130;i+=1)

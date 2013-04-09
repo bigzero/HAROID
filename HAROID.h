@@ -1,6 +1,12 @@
 #ifndef __HAROID_H__
 #define __HAROID_H__
 
+#define MEM_USE_POOLS
+
+#include <FreeRTOS_AVR.h>
+#include "haroid_config.h"
+
+
 typedef int ER;
 typedef bool BOOL;
 
@@ -58,5 +64,13 @@ typedef struct tagPRTCL {
    char  SendID;
    char pkt;
 } PROTOCAL_PKT, PPROTOCAL_PKT;
+
+// decalre a message function.
+extern "C" void  SendMessage(PCOMMAND_STRUCT cmd);
+portBASE_TYPE ReceiveMessage(int rcvID, PCMD_PKT pkt, int ms);
+portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms);
+portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_PKT pkt, int ms);
+
+
 
 #endif

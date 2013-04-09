@@ -1,9 +1,8 @@
-#include <FreeRTOS_AVR.h>
-#include <SoftwareSerial.h>
-#include "haroid_config.h"  // HAROID configuration
 #include "haroid.h"         // HAROID structure
 #include "Parser.h"
+#include "Queue2.h"
 #include <Servo.h>
+#include <SoftwareSerial.h>
 
 
 // declare & initialize IO
@@ -18,14 +17,6 @@ SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
 // declare TASK QUEUE
 xQueueHandle hndQueue[TASK_COUNT];
-
-// decalre a message function.
-void  SendMessage(PCOMMAND_STRUCT cmd);
-portBASE_TYPE ReceiveMessage(int rcvID, PCMD_PKT pkt, int ms);
-portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms);
-portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_PKT pkt, int ms);
-
-
 
 static void UART_TASK(void* arg) {
   //char buf[11]={0,};
@@ -43,10 +34,11 @@ static void UART_TASK(void* arg) {
     {
       char toSend = (char)Serial.read();
       rdbPutbyte(toSend);
-      xQueueSend(hndQueue[PROTOCAL_TASKID],&ptPkt, 20 / portTICK_RATE_MS);
+      //wrbPutbyte(toSend);
+      xQueueSend(hndQueue[PROTOCAL_TASKID],&ptPkt, 0 / portTICK_RATE_MS);
     }
      
-    if(wrbGetbyte(&toRcv))
+    if(wrbGetbyte((char*)&toRcv))
     {
        Serial.write(toRcv);
     }  
@@ -54,7 +46,7 @@ static void UART_TASK(void* arg) {
   }
  }
 
-
+extern "C" void Update2(char pk) ;
 static void BlueTooth_TASK(void* arg) {
   //char buf[11]={0,};
   int i=0;
@@ -64,8 +56,18 @@ static void BlueTooth_TASK(void* arg) {
   COMMAND_STRUCT cntrCMD;
   CMD_PKT cmdPkt;
   PROTOCAL_PKT ptPkt;
+ 
+  const char command[6]={0xFF,0x0E,0xFF,0x20,0x00,0xFF};
+  
 
-
+  while(1) {
+    vTaskDelay(3000L / portTICK_RATE_MS);
+    
+    for(i=0;i<6;i++) {
+      Update2(command[i]);
+    }
+  }
+/*
   while (1) {
 
     if(bluetooth.available())
@@ -76,7 +78,7 @@ static void BlueTooth_TASK(void* arg) {
       
     }
      
-   if(wrbGetbyte(&toRcv))
+   if(wrbGetbyte((char*)&toRcv))
      {
        bluetooth.write(toRcv);
      }   
@@ -84,6 +86,7 @@ static void BlueTooth_TASK(void* arg) {
  
     vTaskDelay(0L / portTICK_RATE_MS);
   }
+ */ 
 }
 
 
@@ -99,7 +102,7 @@ void  SendMessage(PCOMMAND_STRUCT cmd)
    
 //   is_SYNC = (cmd.CMD & 0x01);
    toSendID = ((*cmd).SubCMD >> 4) & 0x0F;
-   
+   wrbPutbyte(toSendID); 
    ret = xQueueSend(hndQueue[toSendID],&cmdSndPkt, 0 / portTICK_RATE_MS);
    if(ret == pdFALSE)
    {
@@ -125,34 +128,12 @@ portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_PKT pkt, int ms)
 }
 
 
-
+/*
 byte cmdPacket[21];   
 COMMAND_STRUCT stCmdPkt;
 SYNC_PKT sync_pkt;
 CMD_PKT cmdPkt;
-CParser parser;
-
-void TEST(void) {
-   byte pk;
-   portBASE_TYPE ret;
-   PROTOCAL_PKT ptpkt; 
-   
-   while(1)
-   {
-        ret = xQueueReceive(hndQueue[PROTOCAL_TASKID],  &ptpkt,( 50 / portTICK_RATE_MS));
-        if(ret == pdTRUE)
-        {
-               parser.Update(pk);  
-         
-        } else
-        {
-          
-        }
-
-      
-     
-   }
-}
+*/
 
 
 static void Protocal_TASK(void* arg) {
@@ -178,197 +159,22 @@ static void Protocal_TASK(void* arg) {
  {
    //ret = xSemaphoreTake(semaFireReceiveCommand,50 / portTICK_RATE_MS);  //portMAX_DELAY
    //ret = ReceiveMessageFromSerial(PROTOCAL_TASKID, &ptpkt, portMAX_DELAY);
-   ret = xQueueReceive(hndQueue[rcvID],  &ptpkt,( 50 / portTICK_RATE_MS));
+   ret = xQueueReceive(hndQueue[PROTOCAL_TASKID],  &ptpkt,( 5000 / portTICK_RATE_MS));
+   //ret = pdTRUE;
    if(ret == pdTRUE)
    {
-         if(rdbGetbyte(&pk) == TRUE)
-         {
-           
-//             wrbPutbyte(pk); 
-     
-             switch(cmdPacketPaserState)
-             {
-                case 0 : // prefix
-                          if( pk == 0xFF )
-                              cmdPacketPaserState = 1;
-                          break;
-                case 1 : // cmd
-                      //    digitalWrite(SPEAKER,HIGH);
-                          if( pk == 0xFF  )  // Reset command?
-                          {
-                              cmdResetCount = 2;
-                              cmdPacketPaserState = 10;
-                          } else {
-                          
-                             cmdPacket[cmdPacketSize++] = pk;
-                          
-                             cmdPacketPaserState = 2;
-                          }
-                          break;     
-                case 2 : // Reserved
-                          if( pk == 0xFF )
-                          {
-                            cmdPacket[cmdPacketSize++] = pk;
-                            cmdPacketPaserState = 3;
-                          } else {
-                            cmdPacketSize = 0;   // initialize 
-                            cmdPacketPaserState = 0;
-                             cmdDataCount = 0;
-                             cmdPacketSize = 0;
-                             cmdResetCount = 0;  
-                          }
-                          break;
-                case 3 : // SubCmd
-                  //     digitalWrite(SPEAKER,LOW);
-                          cmdPacket[cmdPacketSize++] = pk;
-                          cmdPacketPaserState = 4;
-                          break;
-                case 4 : // length
-                    //digitalWrite(SPEAKER,LOW);
-                          cmdPacket[cmdPacketSize++] = pk;
-                          if(pk == 0) {
-                            cmdDataCount = 0;
-                            cmdDataLength = 0;
-                            cmdPacketPaserState = 6;   // exit
-                          } else {
-                            cmdDataCount = 0;   // init
-                            cmdDataLength = pk;  // length
-                            cmdPacketPaserState = 5;   // to read payload 
-                          }
-                          break;
-                case 5 : // payload
-                           cmdPacket[cmdPacketSize++] = pk;
-                           if(++cmdDataCount >= cmdDataLength)
-                              cmdPacketPaserState = 6;   // next state
-                           else
-                              cmdPacketPaserState = 5;   // loop
-                          break;
-                case 6 : // post_fix
-    
-                                
-                          temp = cmdDataLength ^ 0xFF;
-                         
-                          if(pk == temp)
-                          {
-                             stCmdPkt = (COMMAND_STRUCT)(*(PCOMMAND_STRUCT)cmdPacket); 
-                                           
-                         
-                            //ProcessPacket(&stCmdPkt);
-                                          //  digitalWrite(SPEAKER,LOW);
-                                        
-                                         //SendMessage(&cmdPkt,
-                                         //isSYNC = (stCmdPkt.CMD) & 0x01;
-                                         isSYNC = 0;                                  
-                                          
-                                         if(isSYNC == 1)
-                                         {
-                                          
-                                           SendMessage(&stCmdPkt);
-                                           ret = ReceiveMessageAtProtocal(PROTOCAL_TASKID, &sync_pkt, portMAX_DELAY);
-                                          
-                                          
-                                           if(ret == pdTRUE)  // sync_pkt success
-                                           {
-                                               Status = sync_pkt.Status;
-                                               if(Status == 1) // success
-                                               {
-                                                 post_fix = sync_pkt.length ^ 0xFF;
-                                                 
-                                                 wrbPutbyte(0xFF);
-                                                 for(i=0;i<sync_pkt.length;i++)
-                                                 {
-                                                   wrbPutbyte(sync_pkt.data[i]);
-                                                 }
-                                                 wrbPutbyte(post_fix);
-                                                 
-                                               } else {  // fail
-                                                 wrbPutbyte(0xFF);
-                                                 wrbPutbyte(0x00);
-                                                 wrbPutbyte(0xFF);  
-                                               }
-                                            
-                                           } else { // fail
-                                               wrbPutbyte(0xFF);
-                                               wrbPutbyte(0x00);
-                                               wrbPutbyte(0xFF);
-                                           }
-                                           
-                                         } else {
-                                              //   digitalWrite(SPEAKER,LOW);                   
-                                            SendMessage(&stCmdPkt);
-                                                 wrbPutbyte(0x61);
-                                               wrbPutbyte(0x62);
-                                               wrbPutbyte(0x63);  
-                                             //  cmdPkt.SendID = PROTOCAL_TASKID;
-                                             //  cmdPkt.cmdpkt = stCmdPkt;
-                                               
-                                            //   is_SYNC = (cmd.CMD & 0x01);
-                                            //   toSendID = (stCmdPkt.SubCMD >> 4) & 0x0F;
-                                            //  toSendID = SERVO_TASKID;
-                                            //  xQueueSend(hndQueue[toSendID],0 , 50 / portTICK_RATE_MS);  
-                                        
-                                      
-                                     }
-              
-                            
-                            
-                            cmdPacketPaserState = 0;
-                            cmdDataCount = 0;
-                             cmdPacketSize = 0;
-                            cmdResetCount = 0;
-                          } else {
-                            // fail!!!!
-                            cmdPacketPaserState = 0;
-                            cmdDataCount = 0;
-                           cmdPacketSize = 0;
-                           cmdResetCount = 0;
-                          }
-                          break;
-                          
-                    case 10 : 
-                                if(pk == 0xFF)
-                                {
-                                      if(++cmdResetCount == 6)
-                                      {
-                                            BOOL bl;
-                                            
-                                            //bl = wrbPutbyte(0x41);
-                                               // vTaskDelay(2L / portTICK_RATE_MS); 
-                                            //bl = wrbPutbyte(0x42);
-                                               // vTaskDelay(2L / portTICK_RATE_MS); 
-                                            //bl = wrbPutbyte(0x43);
-                                               // vTaskDelay(2L / portTICK_RATE_MS); 
-       
-                                            
-                                           cmdPacketPaserState = 0;
-                                           cmdResetCount = 0;
-                                           cmdPacketSize = 0;
-                                           cmdResetCount = 0;
-                                      } else {
-                                           cmdPacketPaserState = 10;
-                                      }
-                                } else {
-                                     cmdPacketPaserState = 0;
-                                     cmdResetCount = 0;
-                                     cmdPacketSize = 0;
-                                     cmdResetCount = 0;
-                                }
-                                
-                                
-                               break;
-                  }
-               
-     
 
-           }
-   
-   } else {
-     cmdPacketPaserState = 0;
-     cmdDataCount = 0;
-     cmdPacketSize = 0;
-     cmdResetCount = 0;
-   }
-     
+       if(rdbGetbyte((char*)&pk) == TRUE)
+         {
+//           wrbPutbyte(pk);          
+           Update(pk);
+
+         }
+  
+         
+    } else {
+       wrbPutbyte(0xAA); 
+    }
     vTaskDelay(0L / portTICK_RATE_MS); 
  
  } 
