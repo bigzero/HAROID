@@ -161,8 +161,9 @@ CParser::~CParser() {
 };
  
 extern "C" BOOL wrbPutbyte(byte b);
-void CParser::Update(char pk) 
+PARSER_STATUS CParser::Update(char pk) 
 { 
+    PARSER_STATUS ret = FAIL_S;
     byte aa = pk;
  /*   
     if(aa == 0xff) {
@@ -178,18 +179,27 @@ void CParser::Update(char pk)
    
     if(m_pState->GetState() == COMPLETE_S) {
         //wrbPutbyte(0x00);
+        ret = COMPLETE_S;
+        
         m_pState->Do(aa);
-        SendMessage(&m_cmdPkt);
-        State_Prefix(); 
-      
+        //SendMessage(&m_cmdPkt);
+        
+        State_Prefix();
+        
+        
     } else if(m_pState->GetState() == FAIL_S) {
+        ret = FAIL_S;
+      
         m_pState->Do(aa);    
-       State_Prefix();
+        
+        State_Prefix();
       
     } else
     {
-      
+        ret = m_pState->GetState();
     }
+    
+    return ret;
 };
 
 
@@ -249,11 +259,18 @@ void CParser::ChangeState(CState* pNewState)
 
 
 CParser gParser1;
-extern "C" void Update(char pk) {
-  gParser1.Update(pk);
+extern "C" PARSER_STATUS Update(char pk) {
+  return gParser1.Update(pk);
 };
+extern "C" COMMAND_STRUCT GetCommand(void) {
+  return gParser1.m_cmdPkt;
+};
+
 CParser gParser2;
-extern "C" void Update2(char pk) {
-  gParser2.Update(pk);
+extern "C" PARSER_STATUS Update2(char pk) {
+  return gParser2.Update(pk);
+};
+extern "C" COMMAND_STRUCT GetCommand2(void) {
+  return gParser2.m_cmdPkt;
 };
 

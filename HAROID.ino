@@ -22,10 +22,10 @@ static void UART_TASK(void* arg) {
   //char buf[11]={0,};
   int i=0;
   int j=0;
-  int cmdParseDone=0;
+//  int cmdParseDone=0;
   byte toRcv;
-  COMMAND_STRUCT cntrCMD;
-  CMD_PKT cmdPkt;
+//  COMMAND_STRUCT cntrCMD;
+//  CMD_PKT cmdPkt;
   PROTOCAL_PKT ptPkt;
 
   while (1) {
@@ -46,7 +46,6 @@ static void UART_TASK(void* arg) {
   }
  }
 
-extern "C" void Update2(char pk) ;
 static void BlueTooth_TASK(void* arg) {
   //char buf[11]={0,};
   int i=0;
@@ -56,16 +55,19 @@ static void BlueTooth_TASK(void* arg) {
   COMMAND_STRUCT cntrCMD;
   CMD_PKT cmdPkt;
   PROTOCAL_PKT ptPkt;
- 
   const char command[6]={0xFF,0x0E,0xFF,0x20,0x00,0xFF};
   
 
   while(1) {
     vTaskDelay(3000L / portTICK_RATE_MS);
-    
+/*    
     for(i=0;i<6;i++) {
-      Update2(command[i]);
+      if(Update2(command[i]) == COMPLETE_S) {
+         COMMAND_STRUCT cmd = GetCommand2();
+         SendMessage(&cmd); 
+      }
     }
+*/
   }
 /*
   while (1) {
@@ -135,25 +137,13 @@ SYNC_PKT sync_pkt;
 CMD_PKT cmdPkt;
 */
 
+ PROTOCAL_PKT ptpkt; 
+ PARSER_STATUS pret; 
+ COMMAND_STRUCT cmd;
 
 static void Protocal_TASK(void* arg) {
  byte pk;
- int  cmdPacketSize =0;
- int  cmdPacketPaserState = 0;
- int  cmdDataLength = 0;
- int  cmdDataCount = 0;
- int  cmdResetCount = 0;
-
  portBASE_TYPE ret;
- byte temp;
- byte  isSYNC;
- int i;
- int post_fix;
- int Status ; 
- int  rcvID;
- int  toSendID; 
-
- PROTOCAL_PKT ptpkt; 
  
  while(1)
  {
@@ -166,8 +156,12 @@ static void Protocal_TASK(void* arg) {
 
        if(rdbGetbyte((char*)&pk) == TRUE)
          {
-//           wrbPutbyte(pk);          
-           Update(pk);
+//           wrbPutbyte(pk);
+           pret = Update(pk);
+           if(pret == COMPLETE_S) {
+             cmd = GetCommand();
+             SendMessage(&cmd);             
+           }
 
          }
   
@@ -197,7 +191,7 @@ void setup() {
 
 
   // CAUTION!!!! stack size is very small. so you need a heap approach.
-  s1 = xTaskCreate(BlueTooth_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+//  s1 = xTaskCreate(BlueTooth_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   s2 = xTaskCreate(ServoTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   s3 = xTaskCreate(DcTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   s4 = xTaskCreate(Protocal_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);  

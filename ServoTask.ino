@@ -73,17 +73,18 @@ ER vServoRight(PCMD_PKT src)
 ER vServoForward(PCMD_PKT src)
 {
        int i,j;
-        servo.write(90);
-        //vTaskDelay(50/portTICK_RATE_MS);     
-        delay(50);
-        
-        for(i=0;i<5;i++) {
+       
+        for(i=0;i<2;i++) {
             pinMode(LED,OUTPUT);
             digitalWrite(LED, LOW);
             delay(100);
             digitalWrite(LED, HIGH);
             delay(100);
         }
+        /*
+    servo.write(90);
+    //vTaskDelay(50/portTICK_RATE_MS);     
+    delay(50);
         
    for(j=0;j<1;j++)
    {   
@@ -108,6 +109,7 @@ ER vServoForward(PCMD_PKT src)
     delay(50);
     
 //    taskYIELD();
+*/
 }
 
 CMD_PKT srvpkt;

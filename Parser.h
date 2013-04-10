@@ -1,9 +1,9 @@
 #include "HAROID.h"
 #include <arduino.h>
-#include <HAROID.h>
 
-enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S};
-extern "C" void Update(char pk);
+
+//enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S};
+extern "C" PARSER_STATUS Update(char pk);
 
 class CParser;
 
@@ -148,7 +148,7 @@ class CParser
     char m_fSync;
 
     
-  void Update(char pk);
+  PARSER_STATUS Update(char pk);
   void NextState(STATE_ID st);
 
   void State_Prefix();

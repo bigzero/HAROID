@@ -18,10 +18,32 @@ ER vCmdIllegal(PCMD_PKT src)
 
 ER vTest(PCMD_PKT src)
 {
-	int ercd = E_OK;
+	ER er = E_OK;
         int i;
         
-   	return ercd;
+   	return er;
+};
+
+
+
+ER vReadDevice(PCMD_PKT src)
+{
+    DWORD addr,len;
+    ER er = E_OK;
+    PR_DEVICE_STRUCT dev = (PR_DEVICE_STRUCT)&(src->cmdpkt);   
+    
+    return er;  
+};
+ER vWriteDevice(PCMD_PKT src)
+{
+    ER er = E_OK;
+    PW_DEVICE_STRUCT dev = (PW_DEVICE_STRUCT)&(src->cmdpkt);
+     
+     
+    
+    
+    
+    return er;
 };
 
 ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
@@ -41,8 +63,8 @@ ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
   vCmdIllegal,   // 0x0D
   vCmdIllegal,   // 0x0E
   vCmdIllegal,   // 0x0F
-  vCmdIllegal,   // 0x10
-  vCmdIllegal,   // 0x11
+  vReadDevice,   // 0x10
+  vWriteDevice,   // 0x11
   vCmdIllegal,   // 0x12
   vCmdIllegal,   // 0x13
   vCmdIllegal,   // 0x14
