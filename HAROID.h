@@ -47,15 +47,51 @@ typedef SDWORD			FIXED;				// fixed point
 static void ServoTask(void* arg);
 static void DcTask(void* arg);
 //-------------------end  USER setting area-----------------------------------
+typedef	 union	{							//Command structure
+		BYTE	cmd;							//BYTE access
+		 struct	{						//it access
+			BITFLD	sync:1;						//sync command bit
+			BITFLD	wr:1;						//
+			BITFLD	control:1;					// control(1), data(0) command
+			BITFLD	command:1;			                // command(1), response(0) packet
+			BITFLD	:1;						// default : 0
+			BITFLD	:1;						// default : 0
+			BITFLD	:1;						// default : 0
+			BITFLD	:1;						// default : 0
+		} BIT;
+	 
+} T_CMD;
+
+typedef	 union	{							//Command structure
+		BYTE	cmd;							//BYTE access
+		 struct	{						//it access
+			BITFLD	stat:1;						// status (1:ok, 0:fail)
+			BITFLD	:1;						// default : 0
+			BITFLD	:1;					// default : 0
+			BITFLD	:1;			                // default : 0
+			BITFLD	:1;						// default : 0
+			BITFLD	:1;						// default : 0
+			BITFLD	:1;						// default : 0
+			BITFLD	:1;						// default : 0
+		} BIT;
+	 
+} T_SYNC_CMD;
 
 
 typedef struct tagCOMMAND_STRUCT {
-  char   CMD;       
+  T_CMD   CMD;       
   char   Reserved;  //0xFF
   char   SubCMD;    //
   char   length;    //payload length
   char   payload[16];  // payload
 } COMMAND_STRUCT, *PCOMMAND_STRUCT;
+
+typedef struct tagSYNC_STRUCT {
+  T_SYNC_CMD  Status; // 1:ok, 0: fail
+  char  length; // data length
+  char data[16]; // max 256 ?
+} SYNC_STRUCT, *PSYNC_STRUCT;
+
 
 typedef union tagW_DEVICE_DATA {
   char data[4];
@@ -69,20 +105,6 @@ typedef union tagW_DEVICE_DATA {
 };
 
 
-typedef	 union	{							//Command structure
-		BYTE	cmd;							//BYTE access
-		 struct	{						//it access
-			BITFLD	sync:1;						//sync command bit
-			BITFLD	wr:1;						//
-			BITFLD	control:1;					// control(1), data(0) command
-			BITFLD	command:1;			                // command(1), response(0) packet
-			BITFLD	:1;						//Samusung original  Atapi status
-			BITFLD	:1;						//Device fault bit
-			BITFLD	:1;						//Device ready bit
-			BITFLD	:1;						//Busy bit
-		} BIT;
-	 
-} T_CMD;
 
 typedef struct tagW_DEVICE_STRUCT {
   T_CMD   CMD;       
@@ -109,15 +131,14 @@ typedef struct tagCMD_PKT {
   COMMAND_STRUCT cmdpkt;
 } CMD_PKT, *PCMD_PKT;
 
-
-
-
-
 typedef struct tagSYNC_PKT {
-  char  Status; // 1:ok, 0: fail
-  char  length; // data length
-  char data[16]; // max 256 ?
+  char  SendID;
+  SYNC_STRUCT syncpkt;
 } SYNC_PKT, *PSYNC_PKT;
+
+
+
+
 
 
 typedef struct tagPRTCL {
@@ -125,7 +146,8 @@ typedef struct tagPRTCL {
    char pkt;
 } PROTOCAL_PKT, PPROTOCAL_PKT;
 
-typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S} PARSER_STATUS;
+typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S,
+                                  SYNC_LENGTH_S, SYNC_PAYLOAD_S, SYNC_POSTFIX_S, SYNC_COMPLETE_S, SYNC_FAIL_S } PARSER_STATUS;
 
 extern "C" PARSER_STATUS Update(char pk) ;
 extern "C" COMMAND_STRUCT GetCommand(void);

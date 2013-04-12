@@ -31,11 +31,23 @@ STATE_ID CPrefixState::Do(char pkk) {
       
 
 STATE_ID CCmdState::Do(char pk) {
-    m_Parse->m_parsePacket[0] = pk;
-    m_Parse->m_fSync = pk & 0x01;
-    
-    m_Parse->State_Reserved();
-    return RSVD_S;  
+   STATE_ID ret;
+   
+   if(((pk&0xF0)>>4) == 0x00) {  // CMD
+        m_Parse->m_parsePacket[0] = pk;
+        m_Parse->m_fSync = pk & 0x01;
+        
+        m_Parse->State_Reserved();
+        
+        ret = RSVD_S;
+      
+    } else {  // SYNC_CMD
+        m_Parse->m_parsePacket[0] = pk & b0;
+      
+        m_Parse->State_SyncLength();
+        ret = SYNC_LENGTH_S;
+    }
+    return ret;  
 };
 
 
@@ -140,6 +152,89 @@ STATE_ID CFailState::Do(char pk) {
 //  m_Parse->State_Prefix(); 
 
   return FAIL_S;   
+ 
+};
+
+
+
+STATE_ID CSyncLengthState::Do(char pkk) {
+  byte pk = pkk;
+  
+  m_Parse->m_parsePacket[1] = pkk;
+  m_Parse->m_nLength = pk;
+  m_Parse->m_PostfixPredict = m_Parse->m_nLength^0xFF;  
+  
+  if(pk != 0)
+  {
+    m_Parse->State_SyncPayload();
+    return SYNC_PAYLOAD_S;
+  }
+  else
+  {
+      m_Parse->State_SyncPostfix();
+     return SYNC_POSTFIX_S;
+  }
+  
+};
+
+
+STATE_ID CSyncPayloadState::Do(char pk) {
+  
+  m_Parse->m_parsePacket[2+m_Parse->m_nPayload]=pk;
+  ++m_Parse->m_nPayload;
+  if(m_Parse->m_nPayload < m_Parse->m_nLength)
+  {
+    m_Parse->State_SyncPayload();
+    return SYNC_PAYLOAD_S;
+  }
+  else
+  {
+    m_Parse->State_SyncPostfix();
+    return SYNC_POSTFIX_S;
+  }    
+};
+
+
+STATE_ID CSyncPostfixState::Do(char pk) {
+  // byte pk = pkk;
+
+   if(pk == m_Parse->m_PostfixPredict)
+   {
+     m_Parse->State_SyncComplete();
+     return SYNC_COMPLETE_S;
+   } 
+   else
+   {
+     m_Parse->State_SyncFail();
+     return SYNC_FAIL_S;
+   }
+};
+
+
+STATE_ID CSyncCompleteState::Do(char pk) {
+  // very good!!! 
+  m_Parse->m_syncPkt = (SYNC_STRUCT)(*(PSYNC_STRUCT)m_Parse->m_parsePacket);  
+       
+  m_Parse->m_nLength = 0;         // payload length
+  m_Parse->m_nPayload = 0;        // couting variable
+  m_Parse->m_PostfixPredict = 0;
+  
+  // the Complete state is null state. because nothing Do!!!
+//  m_Parse->State_Prefix();
+
+  return SYNC_COMPLETE_S;  
+};
+
+
+STATE_ID CSyncFailState::Do(char pk) {
+  // initialize    
+  m_Parse->m_nLength = 0;         // payload length
+  m_Parse->m_nPayload = 0;        // couting variable
+  m_Parse->m_PostfixPredict = 0;  
+
+//  m_Parse->State_Prefix(); 
+
+  return SYNC_FAIL_S;   
  
 };
 
@@ -250,6 +345,13 @@ void CParser::State_Payload() { ChangeState((CState *)new CPayloadState(this));}
 void CParser::State_Postfix() { ChangeState((CState *)new CPostfixState(this));};  
 void CParser::State_Complete() { ChangeState((CState *)new CCompleteState(this));};
 void CParser::State_Fail() { ChangeState((CState *)new CFailState(this));};
+// Sync 
+void CParser::State_SyncLength() { ChangeState((CState *)new CSyncLengthState(this));};
+void CParser::State_SyncPayload() { ChangeState((CState *)new CSyncPayloadState(this));};
+void CParser::State_SyncPostfix() { ChangeState((CState *)new CSyncPostfixState(this));};  
+void CParser::State_SyncComplete() { ChangeState((CState *)new CSyncCompleteState(this));};
+void CParser::State_SyncFail() { ChangeState((CState *)new CSyncFailState(this));};
+
 
 void CParser::ChangeState(CState* pNewState)
 {

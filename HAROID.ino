@@ -159,8 +159,16 @@ static void Protocal_TASK(void* arg) {
 //           wrbPutbyte(pk);
            pret = Update(pk);
            if(pret == COMPLETE_S) {
-             cmd = GetCommand();
-             SendMessage(&cmd);             
+                 cmd = GetCommand();
+                 SendMessage(&cmd);
+                 if(cmd.CMD.BIT.sync == 1)
+                 {
+                    wrbPutbyte(0x11);
+                    wrbPutbyte(0x11);
+                 } else {
+                   
+                   
+                 }             
            }
 
          }
