@@ -23,7 +23,7 @@ typedef SDWORD			FIXED;				// fixed point
 #define NULL    0
 #define TRUE    1
 #define FALSE   0
-#define BUFF_SIZE (32)
+#define BUFF_SIZE (8)
 
 
 #define E_OK        0       /* Normal Completion */
@@ -37,7 +37,7 @@ typedef SDWORD			FIXED;				// fixed point
 #define PROTOCAL_TASKID  1  // 
 
 //-------------------begin USER setting area---------------------------------
-#define TASK_COUNT 5        // You must set a TASK count.
+#define TASK_COUNT 4        // You must set a TASK count.
 // from number 2, it is user id. You can set a arbitrary number.
 #define SERVO_TASKID     2
 #define DC_TASKID        3
@@ -83,14 +83,14 @@ typedef struct tagCOMMAND_STRUCT {
   char   Reserved;  //0xFF
   char   SubCMD;    //
   char   length;    //payload length
-  char   payload[16];  // payload
-} COMMAND_STRUCT, *PCOMMAND_STRUCT;
+  char   payload[8];  // payload : max 256 . but you have to care a RAM 2K size.
+} COMMAND_STRUCT, *PCOMMAND_STRUCT __attribute__((packed));
 
 typedef struct tagSYNC_STRUCT {
   T_SYNC_CMD  Status; // 1:ok, 0: fail
   char  length; // data length
-  char data[16]; // max 256 ?
-} SYNC_STRUCT, *PSYNC_STRUCT;
+  char data[4]; // data : max 256 . but you have to care a RAM 2K size.
+} SYNC_STRUCT, *PSYNC_STRUCT __attribute__((packed));
 
 
 typedef union tagW_DEVICE_DATA {
@@ -102,7 +102,7 @@ typedef union tagW_DEVICE_DATA {
   struct {
     DWORD dword;
   } DWORD_DATA;
-};
+} DEVICE_DATA __attribute__((packed));
 
 
 
@@ -111,30 +111,30 @@ typedef struct tagW_DEVICE_STRUCT {
   char   Reserved;  //0xFF
   char   SubCMD;    //
   char   length;    // 5,6,8
-  unsigned int addr;  // payload
-  unsigned int data;  
-} W_DEVICE_STRUCT, *PW_DEVICE_STRUCT;
+  unsigned short int addr;  // payload
+  DEVICE_DATA data;  
+} W_DEVICE_STRUCT, *PW_DEVICE_STRUCT __attribute__((packed));
 
-typedef struct tagR_DEVICE_STRUCT {
+typedef  struct tagR_DEVICE_STRUCT {
   T_CMD   CMD;       
   char   Reserved;  //0xFF
   char   SubCMD;    //
   char   length;    // 8
-  unsigned int addr;  // payload
-  unsigned int len;   // 1,2,4
-} R_DEVICE_STRUCT, *PR_DEVICE_STRUCT;
+  unsigned short int addr;  // payload
+  char len;   // 1,2,4
+} R_DEVICE_STRUCT, *PR_DEVICE_STRUCT __attribute__((packed));
 
 
 
 typedef struct tagCMD_PKT {
   char  SendID;
   COMMAND_STRUCT cmdpkt;
-} CMD_PKT, *PCMD_PKT;
+} CMD_PKT, *PCMD_PKT __attribute__((packed));
 
 typedef struct tagSYNC_PKT {
   char  SendID;
   SYNC_STRUCT syncpkt;
-} SYNC_PKT, *PSYNC_PKT;
+} SYNC_PKT, *PSYNC_PKT __attribute__((packed));
 
 
 
@@ -144,7 +144,7 @@ typedef struct tagSYNC_PKT {
 typedef struct tagPRTCL {
    char  SendID;
    char pkt;
-} PROTOCAL_PKT, PPROTOCAL_PKT;
+} PROTOCAL_PKT, PPROTOCAL_PKT __attribute__((packed));
 
 typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S,
                                   SYNC_LENGTH_S, SYNC_PAYLOAD_S, SYNC_POSTFIX_S, SYNC_COMPLETE_S, SYNC_FAIL_S } PARSER_STATUS;

@@ -2,6 +2,7 @@
 #include "Parser.h"
 #include "Queue2.h"
 #include <Servo.h>
+//#include <stdlib.h>
 #include <SoftwareSerial.h>
 
 
@@ -46,17 +47,17 @@ static void UART_TASK(void* arg) {
   }
  }
 
+
 static void BlueTooth_TASK(void* arg) {
   //char buf[11]={0,};
   int i=0;
   int j=0;
   int cmdParseDone=0;
   byte toRcv;
+  const char command[6]={0xFF,0x0E,0xFF,0x20,0x00,0xFF};
   COMMAND_STRUCT cntrCMD;
   CMD_PKT cmdPkt;
-  PROTOCAL_PKT ptPkt;
-  const char command[6]={0xFF,0x0E,0xFF,0x20,0x00,0xFF};
-  
+  PROTOCAL_PKT ptPkt;  
 
   while(1) {
     vTaskDelay(3000L / portTICK_RATE_MS);
@@ -91,13 +92,14 @@ static void BlueTooth_TASK(void* arg) {
  */ 
 }
 
-
 CMD_PKT cmdSndPkt;
+
 void  SendMessage(PCOMMAND_STRUCT cmd)
 {
    int  rcvID;
    int  toSendID;
    portBASE_TYPE ret;
+
    
    cmdSndPkt.SendID = PROTOCAL_TASKID;
    cmdSndPkt.cmdpkt = *cmd;
@@ -137,26 +139,31 @@ SYNC_PKT sync_pkt;
 CMD_PKT cmdPkt;
 */
 
- PROTOCAL_PKT ptpkt; 
- PARSER_STATUS pret; 
- COMMAND_STRUCT cmd;
+
+PARSER_STATUS pret; 
+PROTOCAL_PKT ptpkt;
+COMMAND_STRUCT cmd;
 
 static void Protocal_TASK(void* arg) {
  byte pk;
  portBASE_TYPE ret;
- 
+
+
  while(1)
  {
    //ret = xSemaphoreTake(semaFireReceiveCommand,50 / portTICK_RATE_MS);  //portMAX_DELAY
    //ret = ReceiveMessageFromSerial(PROTOCAL_TASKID, &ptpkt, portMAX_DELAY);
-   ret = xQueueReceive(hndQueue[PROTOCAL_TASKID],  &ptpkt,( 5000 / portTICK_RATE_MS));
+
+ 
+   ret = xQueueReceive(hndQueue[PROTOCAL_TASKID], &ptpkt,( 5000 / portTICK_RATE_MS));
    //ret = pdTRUE;
    if(ret == pdTRUE)
    {
 
        if(rdbGetbyte((char*)&pk) == TRUE)
          {
-//           wrbPutbyte(pk);
+
+ //           wrbPutbyte(pk);
            pret = Update(pk);
            if(pret == COMPLETE_S) {
                  cmd = GetCommand();
@@ -177,6 +184,8 @@ static void Protocal_TASK(void* arg) {
     } else {
        wrbPutbyte(0xAA); 
     }
+   
+  
     vTaskDelay(0L / portTICK_RATE_MS); 
  
  } 
@@ -205,15 +214,15 @@ void setup() {
   s4 = xTaskCreate(Protocal_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);  
   s5 = xTaskCreate(UART_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);  
   
-    hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 10, sizeof( CMD_PKT ) );
-    if(hndQueue[BLUTOOTH_TASKID] == 0) {}
-    hndQueue[PROTOCAL_TASKID] = xQueueCreate( 10, sizeof( PROTOCAL_PKT) );
+ //   hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
+//    if(hndQueue[BLUTOOTH_TASKID] == 0) {}
+    hndQueue[PROTOCAL_TASKID] = xQueueCreate( 5, sizeof( PROTOCAL_PKT) );
     if(hndQueue[PROTOCAL_TASKID] == 0) {}
-    hndQueue[SERVO_TASKID] = xQueueCreate( 10, sizeof( CMD_PKT ) );
+    hndQueue[SERVO_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
     if(hndQueue[SERVO_TASKID] == 0) {}
-    hndQueue[DC_TASKID] = xQueueCreate( 10, sizeof( CMD_PKT) );
+    hndQueue[DC_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT) );
     if(hndQueue[DC_TASKID] == 0) {}
-     hndQueue[UART_TASKID] = xQueueCreate( 10, sizeof( CMD_PKT ) );
+     hndQueue[UART_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
     if(hndQueue[UART_TASKID] == 0) {}   
 
     

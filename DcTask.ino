@@ -33,11 +33,11 @@ ER vDcReverse(PCMD_PKT src)
  //     taskYIELD();
 }
 
-
 CMD_PKT dcpkt;
 static void DcTask(void* arg) {
 	  portBASE_TYPE ret;
 	  byte val;
+ 
 	  
     	 while(1)
 	 { 

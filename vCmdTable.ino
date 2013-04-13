@@ -1,12 +1,13 @@
 
-
-
-
 ER vCmdIllegal(PCMD_PKT src);
 // ServoTask Command
 ER vServoForward(PCMD_PKT src);
 ER vServoLeft(PCMD_PKT src);
 ER vServoRight(PCMD_PKT src);
+ER testtest(PCMD_PKT src)
+{
+ 
+}
 
 ER vCmdIllegal(PCMD_PKT src)
 {
@@ -45,6 +46,7 @@ ER vWriteDevice(PCMD_PKT src)
     
     return er;
 };
+
 
 ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
   vTest,   // 0x00
@@ -97,4 +99,5 @@ ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
   vCmdIllegal,   // 0x2F
   vDcForward,    // 0x30
   vDcReverse,    // 0x31
+  
 };
