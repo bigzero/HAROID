@@ -1,15 +1,15 @@
 
-ER vCmdIllegal(PCMD_PKT src);
+ER vCmdIllegal(PCOMMAND_STRUCT src);
 // ServoTask Command
-ER vServoForward(PCMD_PKT src);
-ER vServoLeft(PCMD_PKT src);
-ER vServoRight(PCMD_PKT src);
-ER testtest(PCMD_PKT src)
+ER vServoForward(PCOMMAND_STRUCT src);
+ER vServoLeft(PCOMMAND_STRUCT src);
+ER vServoRight(PCOMMAND_STRUCT src);
+ER testtest(PCOMMAND_STRUCT src)
 {
  
 }
 
-ER vCmdIllegal(PCMD_PKT src)
+ER vCmdIllegal(PCOMMAND_STRUCT src)
 {
 	int ercd = E_OK;
 
@@ -17,7 +17,7 @@ ER vCmdIllegal(PCMD_PKT src)
 	return ercd;
 };
 
-ER vTest(PCMD_PKT src)
+ER vTest(PCOMMAND_STRUCT src)
 {
 	ER er = E_OK;
         int i;
@@ -27,18 +27,18 @@ ER vTest(PCMD_PKT src)
 
 
 
-ER vReadDevice(PCMD_PKT src)
+ER vReadDevice(PCOMMAND_STRUCT src)
 {
     DWORD addr,len;
     ER er = E_OK;
-    PR_DEVICE_STRUCT dev = (PR_DEVICE_STRUCT)&(src->cmdpkt);   
+    PR_DEVICE_STRUCT dev = (PR_DEVICE_STRUCT)&(src);   
     
     return er;  
 };
-ER vWriteDevice(PCMD_PKT src)
+ER vWriteDevice(PCOMMAND_STRUCT src)
 {
     ER er = E_OK;
-    PW_DEVICE_STRUCT dev = (PW_DEVICE_STRUCT)&(src->cmdpkt);
+    PW_DEVICE_STRUCT dev = (PW_DEVICE_STRUCT)&(src);
      
      
     
@@ -48,7 +48,7 @@ ER vWriteDevice(PCMD_PKT src)
 };
 
 
-ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
+ER (* const Haroid_FuncTbl[])(PCOMMAND_STRUCT src) = {
   vTest,   // 0x00
   vCmdIllegal,   // 0x01
   vCmdIllegal,   // 0x02

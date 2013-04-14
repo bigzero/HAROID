@@ -1,17 +1,17 @@
 #include <haroid.h>
 
-extern ER (* const Haroid_FuncTbl[255])(PCMD_PKT src);
+extern ER (* const Haroid_FuncTbl[255])(PCOMMAND_STRUCT src);
 
-ER vDcStop(PCMD_PKT src)
+ER vDcStop(PCOMMAND_STRUCT src)
 {
 
 }
 
 
-ER vDcForward(PCMD_PKT src)
+ER vDcForward(PCOMMAND_STRUCT src)
 {
      char val;
-     val = src->cmdpkt.payload[0];
+     val = src->payload[0];
      
      digitalWrite(9, LOW);
      analogWrite(10, val);
@@ -21,10 +21,10 @@ ER vDcForward(PCMD_PKT src)
 
 }
 
-ER vDcReverse(PCMD_PKT src)
+ER vDcReverse(PCOMMAND_STRUCT src)
 {
       char val;
-      val = src->cmdpkt.payload[0];
+      val = src->payload[0];
 
       digitalWrite(9, HIGH);
       analogWrite(10,val);
@@ -33,21 +33,49 @@ ER vDcReverse(PCMD_PKT src)
  //     taskYIELD();
 }
 
-CMD_PKT dcpkt;
+COMMAND_STRUCT dcpkt;
+BYTE flag=0;
+	  BYTE val;
+
 static void DcTask(void* arg) {
 	  portBASE_TYPE ret;
-	  byte val;
- 
-	  
+          	  
     	 while(1)
 	 { 
-	          ret = ReceiveMessage(DC_TASKID, &dcpkt, portMAX_DELAY);
+              flag ^= 1;
+              if(flag == 1)
+              {
+              HaroidIoControl(ME,
+                                 DC_TASKID,
+                                 0x20, 
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0,
+                                 &val,
+                                 NOSYNC);
+              } else {
+                        HaroidIoControl(YOU,
+                                 DC_TASKID,
+                                 0x20, 
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0,
+                                 &val,
+                                 NOSYNC);
+              }
+	      /*
+                  ret = ReceiveMessage(DC_TASKID, &dcpkt, portMAX_DELAY);
 	          if(ret == pdTRUE)
 	          {
-                        val = dcpkt.cmdpkt.SubCMD;
+                        val = dcpkt.SubCMD;
                         Haroid_FuncTbl[val](&dcpkt);  
 		        //vTaskDelay(80 / portTICK_RATE_MS);
                        taskYIELD();
-	  	   } 
+	  	   }
+              */
+              
+              vTaskDelay(2000/portTICK_RATE_MS);
 	 } 
 }

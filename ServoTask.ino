@@ -2,9 +2,9 @@
 
 Servo servo;
 
-extern ER (* const Haroid_FuncTbl[255])(PCMD_PKT src);
+extern ER (* const Haroid_FuncTbl[255])(PCOMMAND_STRUCT src);
 
-ER vServoLeft(PCMD_PKT src)
+ER vServoLeft(PCOMMAND_STRUCT src)
 {
       int i,j;
     
@@ -37,7 +37,7 @@ ER vServoLeft(PCMD_PKT src)
         delay(50);  
 }
 
-ER vServoRight(PCMD_PKT src)
+ER vServoRight(PCOMMAND_STRUCT src)
 {
       int i,j;
       
@@ -70,7 +70,7 @@ ER vServoRight(PCMD_PKT src)
         delay(50);
 }
 
-ER vServoForward(PCMD_PKT src)
+ER vServoForward(PCOMMAND_STRUCT src)
 {
        int i,j;
        
@@ -112,10 +112,10 @@ ER vServoForward(PCMD_PKT src)
 */
 }
 
-CMD_PKT srvpkt;
+COMMAND_STRUCT srvpkt;
 
 static void ServoTask(void* arg) {
-  portBASE_TYPE ret;
+  MSG_STATUS ret;
   byte val;
   
   while (1) {
@@ -123,7 +123,7 @@ static void ServoTask(void* arg) {
     ret = ReceiveMessage(SERVO_TASKID, &srvpkt, portMAX_DELAY);
     if(ret == pdTRUE)
     {
-        val = srvpkt.cmdpkt.SubCMD;
+        val = srvpkt.SubCMD;
 
         vTaskSuspendAll();
          servo.attach(11);

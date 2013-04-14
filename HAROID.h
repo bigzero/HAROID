@@ -43,6 +43,12 @@ typedef SDWORD			FIXED;				// fixed point
 #define DC_TASKID        3
 #define UART_TASKID      4
 
+
+typedef enum tagTO { ME, YOU } TO;
+typedef enum tagSYNCTYPE { NOSYNC, SYNC } SYNCTYPE;
+
+typedef portBASE_TYPE MSG_STATUS;
+
 // User task declaration.
 static void ServoTask(void* arg);
 static void DcTask(void* arg);
@@ -51,9 +57,9 @@ typedef	 union	{							//Command structure
 		BYTE	cmd;							//BYTE access
 		 struct	{						//it access
 			BITFLD	sync:1;						//sync command bit
-			BITFLD	wr:1;						//
-			BITFLD	control:1;					// control(1), data(0) command
-			BITFLD	command:1;			                // command(1), response(0) packet
+			BITFLD	:1;						//
+			BITFLD	:1;					// 
+			BITFLD	:1;			                // 
 			BITFLD	:1;						// default : 0
 			BITFLD	:1;						// default : 0
 			BITFLD	:1;						// default : 0
@@ -128,7 +134,7 @@ typedef  struct tagR_DEVICE_STRUCT {
 
 typedef struct tagCMD_PKT {
   char  SendID;
-  COMMAND_STRUCT cmdpkt;
+  COMMAND_STRUCT cmd;
 } CMD_PKT, *PCMD_PKT __attribute__((packed));
 
 typedef struct tagSYNC_PKT {
@@ -156,10 +162,22 @@ extern "C" PARSER_STATUS Update2(char pk);
 extern "C" COMMAND_STRUCT GetCommand2(void);
 
 // decalre a message function.
-extern "C" void  SendMessage(PCOMMAND_STRUCT cmd);
-portBASE_TYPE ReceiveMessage(int rcvID, PCMD_PKT pkt, int ms);
-portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms);
-portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_PKT pkt, int ms);
+MSG_STATUS  SendMessage(PCOMMAND_STRUCT cmd);
+MSG_STATUS ReceiveMessage(int rcvID, PCOMMAND_STRUCT pkt, int ms);
+MSG_STATUS ReceiveSyncMessage(int rcvID, PSYNC_STRUCT pkt, int ms);
+
+MSG_STATUS HaroidIoControl(TO who,
+                     BYTE taskID,
+                     BYTE byIoControlCode, 
+                     BYTE* pInBuffer,
+                     BYTE nInBufferSize,
+                     BYTE* pOutBuffer,
+                     BYTE nOutBufferSize,
+                     BYTE* nBytesReturned,
+                     SYNCTYPE syntype);
+
+//portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms);
+//portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_PKT pkt, int ms);
 
 
 
