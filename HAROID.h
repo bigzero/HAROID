@@ -23,7 +23,7 @@ typedef SDWORD			FIXED;				// fixed point
 #define NULL    0
 #define TRUE    1
 #define FALSE   0
-#define BUFF_SIZE (8)
+#define BUFF_SIZE (12)
 
 
 #define E_OK        0       /* Normal Completion */

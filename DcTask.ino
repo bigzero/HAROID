@@ -35,14 +35,20 @@ ER vDcReverse(PCOMMAND_STRUCT src)
 
 COMMAND_STRUCT dcpkt;
 BYTE flag=0;
-	  BYTE val;
-
+BYTE val;
+WORD val2=0;
 static void DcTask(void* arg) {
 	  portBASE_TYPE ret;
           	  
+          
     	 while(1)
 	 { 
-              flag ^= 1;
+              val2 = analogRead(0);
+              if(val2 > 100)
+                flag = 1;
+               else
+                 flag = 0;
+                
               if(flag == 1)
               {
               HaroidIoControl(ME,
@@ -54,12 +60,13 @@ static void DcTask(void* arg) {
                                  0,
                                  &val,
                                  NOSYNC);
+                                
               } else {
                         HaroidIoControl(YOU,
                                  DC_TASKID,
                                  0x20, 
-                                 NULL,
-                                 0,
+                                 (BYTE*)&val2,
+                                 2,
                                  NULL,
                                  0,
                                  &val,
@@ -75,7 +82,7 @@ static void DcTask(void* arg) {
                        taskYIELD();
 	  	   }
               */
-              
+                               
               vTaskDelay(2000/portTICK_RATE_MS);
 	 } 
 }
