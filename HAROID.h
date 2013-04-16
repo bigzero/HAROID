@@ -43,7 +43,7 @@ typedef SDWORD			FIXED;				// fixed point
 #define DC_TASKID        3
 #define UART_TASKID      4
 
-
+typedef char ID;
 typedef enum tagTO { ME, YOU } TO;
 typedef enum tagSYNCTYPE { NOSYNC, SYNC } SYNCTYPE;
 
@@ -162,12 +162,14 @@ extern "C" PARSER_STATUS Update2(char pk);
 extern "C" COMMAND_STRUCT GetCommand2(void);
 
 // decalre a message function.
-MSG_STATUS  SendMessage(PCOMMAND_STRUCT cmd);
-MSG_STATUS ReceiveMessage(int rcvID, PCOMMAND_STRUCT pkt, int ms);
-MSG_STATUS ReceiveSyncMessage(int rcvID, PSYNC_STRUCT pkt, int ms);
+MSG_STATUS SendMessage(ID id, PCMD_PKT cmd);
+MSG_STATUS ReceiveMessage(ID id, PCMD_PKT pkt, int ms);
+MSG_STATUS ReceiveSyncMessage(ID id, PSYNC_STRUCT pkt, int ms);
+// 
+//MSG_STATUS CompleteSyncMessage(ID id, PSYNC_STRUCT pkt);
 
 MSG_STATUS HaroidIoControl(TO who,
-                     BYTE taskID,
+                     ID id,
                      BYTE byIoControlCode, 
                      BYTE* pInBuffer,
                      BYTE nInBufferSize,

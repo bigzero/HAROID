@@ -15,12 +15,12 @@ const int bluetoothRx = BLUETOOTH_RX;   // setting bluetooth rx(bluetooth side)
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 //xSemaphoreHandle xSemaphore;
 
- COMMAND_STRUCT HCcmd;
+ CMD_PKT HCcmd;
  SYNC_STRUCT HCsyncSt;
  MSG_STATUS HCret;
  
 MSG_STATUS HaroidIoControl(TO who,
-                     BYTE taskID,
+                     ID id,
                      BYTE byIoControlCode, 
                      BYTE* pInBuffer,
                      BYTE nInBufferSize,
@@ -31,18 +31,18 @@ MSG_STATUS HaroidIoControl(TO who,
 
      BYTE i;
      
-     HCcmd.CMD.BIT.sync = (syntype == SYNC) ? 1 : 0;
-     HCcmd.Reserved = 0xFF;
-     HCcmd.SubCMD =  byIoControlCode;
-     HCcmd.length = nInBufferSize;
+     HCcmd.cmd.CMD.BIT.sync = (syntype == SYNC) ? 1 : 0;
+     HCcmd.cmd.Reserved = 0xFF;
+     HCcmd.cmd.SubCMD =  byIoControlCode;
+     HCcmd.cmd.length = nInBufferSize;
      if(nInBufferSize != 0)
-       memcpy(HCcmd.payload, (BYTE*)pInBuffer, nInBufferSize);
+       memcpy(HCcmd.cmd.payload, (BYTE*)pInBuffer, nInBufferSize);
      
      if(who == ME) {
-       HCret = SendMessage(&HCcmd);
+       HCret = SendMessage(id, &HCcmd);
    
        if(syntype == SYNC) {
-           HCret = ReceiveSyncMessage(taskID, &HCsyncSt, 1000);
+           HCret = ReceiveSyncMessage(id, &HCsyncSt, 1000);
            if(HCret == pdTRUE) {
                if(HCsyncSt.Status.cmd == 0) {  // fail
                    HCret = pdFALSE;
@@ -62,12 +62,12 @@ MSG_STATUS HaroidIoControl(TO who,
     else { // outside 
         // wrbPutbyte
         wrbPutbyte(0xFF);
-        wrbPutbyte(*((BYTE*)(&HCcmd.CMD)));
-        wrbPutbyte(HCcmd.Reserved);
-        wrbPutbyte(HCcmd.SubCMD);
-        wrbPutbyte(HCcmd.length);
-        for(i=0;i<HCcmd.length;i++) {
-          wrbPutbyte(HCcmd.payload[i]);
+        wrbPutbyte(*((BYTE*)(&HCcmd.cmd.CMD)));
+        wrbPutbyte(HCcmd.cmd.Reserved);
+        wrbPutbyte(HCcmd.cmd.SubCMD);
+        wrbPutbyte(HCcmd.cmd.length);
+        for(i=0;i<HCcmd.cmd.length;i++) {
+          wrbPutbyte(HCcmd.cmd.payload[i]);
         }
         wrbPutbyte(0xFF);
     }    
@@ -81,6 +81,7 @@ MSG_STATUS HaroidIoControl(TO who,
 
 // declare TASK QUEUE
 xQueueHandle hndQueue[TASK_COUNT];
+xQueueHandle hndSyncQueue[TASK_COUNT];
 
 static void UART_TASK(void* arg) {
   //char buf[11]={0,};
@@ -157,10 +158,10 @@ static void BlueTooth_TASK(void* arg) {
 
 //CMD_PKT cmdSndPkt;
 
-MSG_STATUS  SendMessage(PCOMMAND_STRUCT cmd)
+MSG_STATUS  SendMessage(ID id, PCMD_PKT cmdpkt)
 {
-   int  rcvID;
-   int  toSendID;
+ //  int  rcvID;
+   BYTE  toSendID;
    MSG_STATUS ret;
 //  if( xSemaphore != NULL ) {
 
@@ -171,10 +172,12 @@ MSG_STATUS  SendMessage(PCOMMAND_STRUCT cmd)
                taskENTER_CRITICAL();
             //   is_SYNC = (cmd.CMD & 0x01);
                ret = pdFALSE;
-               toSendID = ((*cmd).SubCMD >> 4) & 0x0F;
+               
+               cmdpkt->SendID = id;
+               toSendID = ((cmdpkt->cmd.SubCMD) >> 4) & 0x0F;
             //   wrbPutbyte(toSendID);
                taskEXIT_CRITICAL() ;
-               ret = xQueueSend(hndQueue[toSendID], cmd, 0 / portTICK_RATE_MS);
+               ret = xQueueSend(hndQueue[toSendID], cmdpkt, 0 / portTICK_RATE_MS);
              
                if(ret == pdFALSE)
                {
@@ -189,16 +192,20 @@ MSG_STATUS  SendMessage(PCOMMAND_STRUCT cmd)
    return ret;
 }
 
-MSG_STATUS ReceiveMessage(int rcvID, PCOMMAND_STRUCT pkt, int ms)
+MSG_STATUS ReceiveMessage(ID id, PCMD_PKT pkt, int ms)
 {
-   return xQueueReceive(hndQueue[rcvID], (PCOMMAND_STRUCT) pkt,( ms / portTICK_RATE_MS)); 
+   return xQueueReceive(hndQueue[id], (PCMD_PKT) pkt,( ms / portTICK_RATE_MS)); 
 }
 
-MSG_STATUS ReceiveSyncMessage(int rcvID, PSYNC_STRUCT pkt, int ms)
+MSG_STATUS ReceiveSyncMessage(ID id, PSYNC_STRUCT pkt, int ms)
 {
-   return xQueueReceive(hndQueue[rcvID], (PSYNC_STRUCT) pkt,( ms / portTICK_RATE_MS)); 
+   return xQueueReceive(hndSyncQueue[id], (PSYNC_STRUCT) pkt,( ms / portTICK_RATE_MS)); 
 }
 
+MSG_STATUS CompleteSyncMessage(ID id, PSYNC_STRUCT pkt)
+{
+  return xQueueSend(hndSyncQueue[id], pkt, 0 / portTICK_RATE_MS);
+}
 
 /*
 portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms)
@@ -223,7 +230,7 @@ CMD_PKT cmdPkt;
 
 PARSER_STATUS pret; 
 PROTOCAL_PKT ptpkt;
-COMMAND_STRUCT cmd;
+CMD_PKT cmdpkt;
 
 static void Protocal_TASK(void* arg) {
  byte pk;
@@ -247,9 +254,9 @@ static void Protocal_TASK(void* arg) {
  //           wrbPutbyte(pk);
            pret = Update(pk);
            if(pret == COMPLETE_S) {
-                 cmd = GetCommand();
-                 SendMessage(&cmd);
-                 if(cmd.CMD.BIT.sync == 1)
+                 cmdpkt.cmd = GetCommand();
+                 SendMessage(PROTOCAL_TASKID, &cmdpkt);
+                 if(cmdpkt.cmd.CMD.BIT.sync == 1)
                  {
                     wrbPutbyte(0x11);
                     wrbPutbyte(0x11);
@@ -300,13 +307,24 @@ void setup() {
  //   hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
 //    if(hndQueue[BLUTOOTH_TASKID] == 0) {}
     hndQueue[PROTOCAL_TASKID] = xQueueCreate( 5, sizeof( PROTOCAL_PKT) );
+    hndSyncQueue[PROTOCAL_TASKID] = xQueueCreate( 1, sizeof(SYNC_STRUCT));
     if(hndQueue[PROTOCAL_TASKID] == 0) {}
-    hndQueue[SERVO_TASKID] = xQueueCreate( 5, sizeof( COMMAND_STRUCT ) );
+    if(hndSyncQueue[PROTOCAL_TASKID] == 0) {}
+    
+    hndQueue[SERVO_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
+    hndSyncQueue[SERVO_TASKID] = xQueueCreate( 1, sizeof(SYNC_STRUCT) );
     if(hndQueue[SERVO_TASKID] == 0) {}
-    hndQueue[DC_TASKID] = xQueueCreate( 5, sizeof( COMMAND_STRUCT) );
+    if(hndSyncQueue[SERVO_TASKID] == 0) {}
+
+    hndQueue[DC_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT) );
+    hndSyncQueue[DC_TASKID] = xQueueCreate( 1, sizeof( SYNC_STRUCT) );
     if(hndQueue[DC_TASKID] == 0) {}
-     hndQueue[UART_TASKID] = xQueueCreate( 5, sizeof( COMMAND_STRUCT ) );
+    if(hndSyncQueue[DC_TASKID] == 0) {}
+
+     hndQueue[UART_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
+     hndSyncQueue[UART_TASKID] = xQueueCreate( 1, sizeof( SYNC_STRUCT ) );
     if(hndQueue[UART_TASKID] == 0) {}   
+    if(hndSyncQueue[UART_TASKID] == 0) {}   
 
     
     

@@ -1,14 +1,14 @@
 #include <haroid.h>
 
-extern ER (* const Haroid_FuncTbl[255])(PCOMMAND_STRUCT src);
+extern ER (* const Haroid_FuncTbl[255])(ID id, PCOMMAND_STRUCT src);
 
-ER vDcStop(PCOMMAND_STRUCT src)
+ER vDcStop(ID id, PCOMMAND_STRUCT src)
 {
 
 }
 
 
-ER vDcForward(PCOMMAND_STRUCT src)
+ER vDcForward(ID id, PCOMMAND_STRUCT src)
 {
      char val;
      val = src->payload[0];
@@ -21,7 +21,7 @@ ER vDcForward(PCOMMAND_STRUCT src)
 
 }
 
-ER vDcReverse(PCOMMAND_STRUCT src)
+ER vDcReverse(ID id, PCOMMAND_STRUCT src)
 {
       char val;
       val = src->payload[0];
