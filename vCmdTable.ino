@@ -1,15 +1,15 @@
 
-ER vCmdIllegal(ID id, PCOMMAND_STRUCT src);
+ER vCmdIllegal(PCMD_PKT src);
 // ServoTask Command
-ER vServoForward(ID id, PCOMMAND_STRUCT src);
-ER vServoLeft(ID id, PCOMMAND_STRUCT src);
-ER vServoRight(ID id, PCOMMAND_STRUCT src);
-ER testtest(ID id, PCOMMAND_STRUCT src)
+ER vServoForward(PCMD_PKT src);
+ER vServoLeft(PCMD_PKT src);
+ER vServoRight(PCMD_PKT src);
+ER testtest(PCMD_PKT src)
 {
  
 }
 
-ER vCmdIllegal(ID id, PCOMMAND_STRUCT src)
+ER vCmdIllegal(PCMD_PKT src)
 {
 	int ercd = E_OK;
 
@@ -17,17 +17,53 @@ ER vCmdIllegal(ID id, PCOMMAND_STRUCT src)
 	return ercd;
 };
 
-ER vTest(ID id, PCOMMAND_STRUCT src)
+        int cm; 
+
+
+ER vTest(PCMD_PKT src)
 {
 	ER er = E_OK;
-        int i;
+        WORD i;
+        static SYNC_STRUCT result;
+        
+        const int TrigPin = 2; 
+        const int EchoPin = 3; 
+       vTaskSuspendAll();
+        digitalWrite(TrigPin, LOW);  
+        delayMicroseconds(2);
+        digitalWrite(TrigPin, HIGH); 
+        delayMicroseconds(10);
+        digitalWrite(TrigPin, LOW); 
+        
+        cm = pulseIn(EchoPin, HIGH) / 58.0; 
+        
+        cm = (int(cm * 100.0)) / 100.0;  
+xTaskResumeAll();
+
+
+//        Serial.print(cm);
+//        Serial.print("cm");
+//        Serial.println();
+//
+//        wrbPutbyte((int)cm);
+
+        //delay(1000); 
+         i= (WORD) cm;
+         //wrbPutbyte(i);
+           result.Status = 1;
+         result.length = 1;
+         result.data[0] = i;  
+         CompleteSyncMessage(src->SendID, &result);
+
+
+
         
    	return er;
 };
 
 
 
-ER vReadDevice(ID id, PCOMMAND_STRUCT src)
+ER vReadDevice(PCMD_PKT src)
 {
     DWORD addr,len;
     ER er = E_OK;
@@ -35,7 +71,7 @@ ER vReadDevice(ID id, PCOMMAND_STRUCT src)
     
     return er;  
 };
-ER vWriteDevice(ID id, PCOMMAND_STRUCT src)
+ER vWriteDevice(PCMD_PKT src)
 {
     ER er = E_OK;
     PW_DEVICE_STRUCT dev = (PW_DEVICE_STRUCT)&(src);
@@ -48,7 +84,7 @@ ER vWriteDevice(ID id, PCOMMAND_STRUCT src)
 };
 
 
-ER (* const Haroid_FuncTbl[])(ID id, PCOMMAND_STRUCT src) = {
+ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
   vTest,   // 0x00
   vCmdIllegal,   // 0x01
   vCmdIllegal,   // 0x02
@@ -84,7 +120,7 @@ ER (* const Haroid_FuncTbl[])(ID id, PCOMMAND_STRUCT src) = {
   vServoForward,   // 0x20
   vServoLeft,    // 0x21
   vServoRight,   // 0x22
-  vCmdIllegal,   // 0x23
+  vTest,   // 0x23
   vCmdIllegal,   // 0x24
   vCmdIllegal,   // 0x25
   vCmdIllegal,   // 0x26

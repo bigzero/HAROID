@@ -2,9 +2,9 @@
 
 Servo servo;
 
-extern ER (* const Haroid_FuncTbl[255])(ID id, PCOMMAND_STRUCT src);
+extern ER (* const Haroid_FuncTbl[255])(PCMD_PKT src);
 
-ER vServoLeft(ID id, PCOMMAND_STRUCT src)
+ER vServoLeft(PCMD_PKT src)
 {
       int i,j;
     
@@ -37,7 +37,7 @@ ER vServoLeft(ID id, PCOMMAND_STRUCT src)
         delay(50);  
 }
 
-ER vServoRight(ID id, PCOMMAND_STRUCT src)
+ER vServoRight(PCMD_PKT src)
 {
       int i,j;
       
@@ -70,9 +70,13 @@ ER vServoRight(ID id, PCOMMAND_STRUCT src)
         delay(50);
 }
 
-ER vServoForward(ID id, PCOMMAND_STRUCT src)
+ER vServoForward(PCMD_PKT src)
 {
        int i,j;
+       static SYNC_STRUCT ss;
+       ss.Status = 0;
+       
+       CompleteSyncMessage(src->SendID , &ss);
        
         for(i=0;i<2;i++) {
             pinMode(LED,OUTPUT);
@@ -117,19 +121,17 @@ CMD_PKT srvpkt;
 static void ServoTask(void* arg) {
   MSG_STATUS ret;
   byte val;
-  ID  id;
   
   while (1) {
   
     ret = ReceiveMessage(SERVO_TASKID, &srvpkt, portMAX_DELAY);
     if(ret == pdTRUE)
-    {
-        id = srvpkt.SendID;   
+    { 
         val = srvpkt.cmd.SubCMD;
      
         vTaskSuspendAll();
          servo.attach(11);
-         Haroid_FuncTbl[val](id, &(srvpkt.cmd));
+         Haroid_FuncTbl[val](&srvpkt);
          servo.detach();
         xTaskResumeAll();
 

@@ -15,9 +15,6 @@ const int bluetoothRx = BLUETOOTH_RX;   // setting bluetooth rx(bluetooth side)
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 //xSemaphoreHandle xSemaphore;
 
- CMD_PKT HCcmd;
- SYNC_STRUCT HCsyncSt;
- MSG_STATUS HCret;
  
 MSG_STATUS HaroidIoControl(TO who,
                      ID id,
@@ -29,6 +26,10 @@ MSG_STATUS HaroidIoControl(TO who,
                      BYTE* nBytesReturned,
                      SYNCTYPE syntype) {
 
+     static  CMD_PKT HCcmd;
+     static  SYNC_STRUCT HCsyncSt;
+     static  MSG_STATUS HCret;
+                       
      BYTE i;
      
      HCcmd.cmd.CMD.BIT.sync = (syntype == SYNC) ? 1 : 0;
@@ -42,9 +43,9 @@ MSG_STATUS HaroidIoControl(TO who,
        HCret = SendMessage(id, &HCcmd);
    
        if(syntype == SYNC) {
-           HCret = ReceiveSyncMessage(id, &HCsyncSt, 1000);
+           HCret = ReceiveSyncMessage(id, &HCsyncSt, 100);
            if(HCret == pdTRUE) {
-               if(HCsyncSt.Status.cmd == 0) {  // fail
+               if(HCsyncSt.Status == 0) {  // fail
                    HCret = pdFALSE;
                } else { // true
                    *nBytesReturned = (nOutBufferSize > HCsyncSt.length) ? HCsyncSt.length : nOutBufferSize;
@@ -170,13 +171,14 @@ MSG_STATUS  SendMessage(ID id, PCMD_PKT cmdpkt)
               // cmdSndPkt.SendID = PROTOCAL_TASKID;
               // cmdSndPkt.cmd = *cmd;
                taskENTER_CRITICAL();
-            //   is_SYNC = (cmd.CMD & 0x01);
                ret = pdFALSE;
                
                cmdpkt->SendID = id;
                toSendID = ((cmdpkt->cmd.SubCMD) >> 4) & 0x0F;
-            //   wrbPutbyte(toSendID);
                taskEXIT_CRITICAL() ;
+
+
+
                ret = xQueueSend(hndQueue[toSendID], cmdpkt, 0 / portTICK_RATE_MS);
              
                if(ret == pdFALSE)
@@ -207,63 +209,67 @@ MSG_STATUS CompleteSyncMessage(ID id, PSYNC_STRUCT pkt)
   return xQueueSend(hndSyncQueue[id], pkt, 0 / portTICK_RATE_MS);
 }
 
-/*
-portBASE_TYPE ReceiveMessageFromSerial(int rcvID, PPROTOCAL_PKT pkt, int ms)
-{
-   return xQueueReceive(hndQueue[rcvID], (PPROTOCAL_PKT) pkt,( ms / portTICK_RATE_MS)); 
-}
 
 
-portBASE_TYPE ReceiveMessageAtProtocal(int rcvID, PSYNC_STRUCT pkt, int ms)
-{
-   return (portBASE_TYPE)xQueueReceive(hndQueue[rcvID], (PSYNC_STRUCT) pkt,( portTickType )( ms / portTICK_RATE_MS)); 
-}
-*/
-
-/*
-byte cmdPacket[21];   
-COMMAND_STRUCT stCmdPkt;
-SYNC_PKT sync_pkt;
-CMD_PKT cmdPkt;
-*/
-
-
-PARSER_STATUS pret; 
-PROTOCAL_PKT ptpkt;
-CMD_PKT cmdpkt;
 
 static void Protocal_TASK(void* arg) {
- byte pk;
- portBASE_TYPE ret;
+  static PARSER_STATUS pret; 
+  static PROTOCAL_PKT ptpkt;
+  static CMD_PKT cmdpkt;
+  static SYNC_STRUCT ptsyncSt;
+  static MSG_STATUS ptret;
+ 
+  byte pk;
+  portBASE_TYPE ret;
+  BYTE nSize;
+  BYTE i;
 
 
  while(1)
  {
-   //ret = xSemaphoreTake(semaFireReceiveCommand,50 / portTICK_RATE_MS);  //portMAX_DELAY
-   //ret = ReceiveMessageFromSerial(PROTOCAL_TASKID, &ptpkt, portMAX_DELAY);
-
- 
    ret = xQueueReceive(hndQueue[PROTOCAL_TASKID], &ptpkt,( 5000 / portTICK_RATE_MS));
-   //ret = pdTRUE;
    if(ret == pdTRUE)
    {
 
        if(rdbGetbyte((char*)&pk) == TRUE)
-         {
-
- //           wrbPutbyte(pk);
+       {
            pret = Update(pk);
            if(pret == COMPLETE_S) {
+                 cmdpkt.SendID = PROTOCAL_TASKID;
                  cmdpkt.cmd = GetCommand();
+            
                  SendMessage(PROTOCAL_TASKID, &cmdpkt);
-                 if(cmdpkt.cmd.CMD.BIT.sync == 1)
-                 {
-                    wrbPutbyte(0x11);
-                    wrbPutbyte(0x11);
-                 } else {
-                   
-                   
-                 }             
+                 if(cmdpkt.cmd.CMD.BIT.sync == 1) {
+                     ptret = ReceiveSyncMessage(PROTOCAL_TASKID, &ptsyncSt, 1000);
+  
+                     if(ptret == pdTRUE) {
+                    
+                             wrbPutbyte(0xFF);                      // prefix
+                             if(ptsyncSt.Status == 1)
+                             {
+                                wrbPutbyte(0x01);                   // status
+                                wrbPutbyte(ptsyncSt.length);        // length
+                                for(i=0;i<ptsyncSt.length;i++) {    //data
+                                  wrbPutbyte(ptsyncSt.data[i]);
+                                }
+                             } else {
+                               wrbPutbyte(0x00);                   // status
+                             }
+                             
+                             wrbPutbyte(0xFF);                     // postfix
+                             
+                       
+                         
+                     } else {
+                       
+                            wrbPutbyte(0xFF);
+                            wrbPutbyte(0x00);
+                            wrbPutbyte(0xFF);  
+                     }
+                     
+                 } // if(syntype == SYNC)
+
+  
            }
 
          }
@@ -288,6 +294,11 @@ void setup() {
   pinMode(SPEAKER_PIN, OUTPUT);
   digitalWrite(SPEAKER_PIN,HIGH);
   bluetooth.begin(9600);  
+
+
+        pinMode(2, OUTPUT); 
+        pinMode(3, INPUT); 
+
 
   //xSemaphore = xSemaphoreCreateMutex();
 

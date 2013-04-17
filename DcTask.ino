@@ -1,17 +1,17 @@
 #include <haroid.h>
 
-extern ER (* const Haroid_FuncTbl[255])(ID id, PCOMMAND_STRUCT src);
+extern ER (* const Haroid_FuncTbl[255])(PCMD_PKT src);
 
-ER vDcStop(ID id, PCOMMAND_STRUCT src)
+ER vDcStop(PCMD_PKT src)
 {
 
 }
 
 
-ER vDcForward(ID id, PCOMMAND_STRUCT src)
+ER vDcForward(PCMD_PKT src)
 {
      char val;
-     val = src->payload[0];
+     val = src->cmd.payload[0];
      
      digitalWrite(9, LOW);
      analogWrite(10, val);
@@ -21,10 +21,10 @@ ER vDcForward(ID id, PCOMMAND_STRUCT src)
 
 }
 
-ER vDcReverse(ID id, PCOMMAND_STRUCT src)
+ER vDcReverse(PCMD_PKT src)
 {
       char val;
-      val = src->payload[0];
+      val = src->cmd.payload[0];
 
       digitalWrite(9, HIGH);
       analogWrite(10,val);
@@ -36,7 +36,7 @@ ER vDcReverse(ID id, PCOMMAND_STRUCT src)
 COMMAND_STRUCT dcpkt;
 BYTE flag=0;
 BYTE val;
-WORD val2=0;
+BYTE val2=0;
 static void DcTask(void* arg) {
 	  portBASE_TYPE ret;
           	  
@@ -60,17 +60,48 @@ static void DcTask(void* arg) {
                                  0,
                                  &val,
                                  NOSYNC);
-                                
+                                 
+                                                         
               } else {
-                        HaroidIoControl(YOU,
+                
+                        HaroidIoControl(ME,
+                                 DC_TASKID,
+                                 0x23, 
+                                 NULL ,
+                                 0,
+                                 (BYTE*)&val2,
+                                 1,
+                                 &val,
+                                 SYNC);
+                                 
+                                 wrbPutbyte(val2);
+                                 
+                       if(val2 < 30) {
+           
+              HaroidIoControl(ME,
                                  DC_TASKID,
                                  0x20, 
-                                 (BYTE*)&val2,
-                                 2,
+                                 NULL,
+                                 0,
                                  NULL,
                                  0,
                                  &val,
                                  NOSYNC);
+ 
+              HaroidIoControl(ME,
+                                 DC_TASKID,
+                                 0x21, 
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0,
+                                 &val,
+                                 NOSYNC);
+ 
+ 
+           
+                       }              
+                   
               }
 	      /*
                   ret = ReceiveMessage(DC_TASKID, &dcpkt, portMAX_DELAY);
@@ -83,6 +114,6 @@ static void DcTask(void* arg) {
 	  	   }
               */
                                
-              vTaskDelay(2000/portTICK_RATE_MS);
+              vTaskDelay(1000/portTICK_RATE_MS);
 	 } 
 }

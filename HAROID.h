@@ -93,7 +93,7 @@ typedef struct tagCOMMAND_STRUCT {
 } COMMAND_STRUCT, *PCOMMAND_STRUCT __attribute__((packed));
 
 typedef struct tagSYNC_STRUCT {
-  T_SYNC_CMD  Status; // 1:ok, 0: fail
+  char  Status; // 1:ok, 0: fail
   char  length; // data length
   char data[4]; // data : max 256 . but you have to care a RAM 2K size.
 } SYNC_STRUCT, *PSYNC_STRUCT __attribute__((packed));
@@ -166,7 +166,7 @@ MSG_STATUS SendMessage(ID id, PCMD_PKT cmd);
 MSG_STATUS ReceiveMessage(ID id, PCMD_PKT pkt, int ms);
 MSG_STATUS ReceiveSyncMessage(ID id, PSYNC_STRUCT pkt, int ms);
 // 
-//MSG_STATUS CompleteSyncMessage(ID id, PSYNC_STRUCT pkt);
+MSG_STATUS CompleteSyncMessage(ID id, PSYNC_STRUCT pkt);
 
 MSG_STATUS HaroidIoControl(TO who,
                      ID id,
