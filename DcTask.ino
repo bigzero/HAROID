@@ -33,24 +33,119 @@ ER vDcReverse(PCMD_PKT src)
  //     taskYIELD();
 }
 
-COMMAND_STRUCT dcpkt;
+CMD_PKT dcpkt;
 BYTE flag=0;
 BYTE val;
 BYTE val2=0;
 static void DcTask(void* arg) {
-	  portBASE_TYPE ret;
+	  MSG_STATUS ret;
           	  
           
     	 while(1)
 	 { 
+  
               val2 = analogRead(0);
+             // wrbPutbyte(val2);
               if(val2 > 100)
-                flag = 1;
-               else
-                 flag = 0;
+              {
+  
                 
+                         HaroidIoControl(ME,
+                                               DC_TASKID,
+                                               0x20, 
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               0,
+                                               &val,
+                                               NOSYNC);
+               
+                            HaroidIoControl(ME,
+                                               DC_TASKID,
+                                               0x21, 
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               0,
+                                               &val,
+                                               NOSYNC);    
+                                        
+                                         
+                                         HaroidIoControl(YOU,
+                                               DC_TASKID,
+                                               0x20, 
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               0,
+                                               &val,
+                                               NOSYNC);             
+                                               
+                              
+                                ret =  ReceiveMessage(DC_TASKID, &dcpkt, 10000);
+                                if(ret == pdTRUE)
+                                {
+                                                                          HaroidIoControl(ME,
+                                                           DC_TASKID,
+                                                           0x20, 
+                                                           NULL,
+                                                           0,
+                                                           NULL,
+                                                           0,
+                                                           &val,
+                                                           NOSYNC);   
+                                                           
+                                                                                                   HaroidIoControl(ME,
+                                                           DC_TASKID,
+                                                           0x20, 
+                                                           NULL,
+                                                           0,
+                                                           NULL,
+                                                           0,
+                                                           &val,
+                                                           NOSYNC);   
+                                                           
+                                                                                                   HaroidIoControl(ME,
+                                                           DC_TASKID,
+                                                           0x20, 
+                                                           NULL,
+                                                           0,
+                                                           NULL,
+                                                           0,
+                                                           &val,
+                                                           NOSYNC);   
+                                  
+                                      //    wrbPutbyte(0x18);
+                                } else {
+                                      //    wrbPutbyte(0x28);
+                                              // Buzer sound
+                                        HaroidIoControl(ME,
+                                                           DC_TASKID,
+                                                           0x20, 
+                                                           NULL,
+                                                           0,
+                                                           NULL,
+                                                           0,
+                                                           &val,
+                                                           NOSYNC);    
+                                                           
+                                        HaroidIoControl(ME,
+                                                       DC_TASKID,
+                                                       0x22, 
+                                                       NULL,
+                                                       0,
+                                                       NULL,
+                                                       0,
+                                                       &val,
+                                                       NOSYNC);                   
+                                }    
+              }
+   
+   /*
+              flag = 1;   
               if(flag == 1)
               {
+               
               HaroidIoControl(ME,
                                  DC_TASKID,
                                  0x20, 
@@ -76,33 +171,68 @@ static void DcTask(void* arg) {
                                  
                                  wrbPutbyte(val2);
                                  
-                       if(val2 < 30) {
-           
-              HaroidIoControl(ME,
-                                 DC_TASKID,
-                                 0x20, 
-                                 NULL,
-                                 0,
-                                 NULL,
-                                 0,
-                                 &val,
-                                 NOSYNC);
- 
-              HaroidIoControl(ME,
-                                 DC_TASKID,
-                                 0x21, 
-                                 NULL,
-                                 0,
-                                 NULL,
-                                 0,
-                                 &val,
-                                 NOSYNC);
+                       if(val2 < 150) {
+                                // Buzer sound
+                                HaroidIoControl(ME,
+                                                   DC_TASKID,
+                                                   0x20, 
+                                                   NULL,
+                                                   0,
+                                                   NULL,
+                                                   0,
+                                                   &val,
+                                                   NOSYNC);
+                                // Servo UP!!!
+                                
+                                HaroidIoControl(ME,
+                                                   DC_TASKID,
+                                                   0x21, 
+                                                   NULL,
+                                                   0,
+                                                   NULL,
+                                                   0,
+                                                   &val,
+                                                   NOSYNC);
+                                                   
+
+                                ret =  ReceiveSyncMessage(DC_TASKID, &s_struct, 5000);
+                                if(ret == pdTRUE)
+                                {
+                                  wrbPutbyte(0x18);
+                                } else {
+                                  wrbPutbyte(0x28);
+                                      // Buzer sound
+                                HaroidIoControl(ME,
+                                                   DC_TASKID,
+                                                   0x20, 
+                                                   NULL,
+                                                   0,
+                                                   NULL,
+                                                   0,
+                                                   &val,
+                                                   NOSYNC);                            
+                                  
+                                     HaroidIoControl(ME,
+                                                       DC_TASKID,
+                                                       0x22, 
+                                                       NULL,
+                                                       0,
+                                                       NULL,
+                                                       0,
+                                                       &val,
+                                                       NOSYNC);
+                                                       
+                                }                       
  
  
            
                        }              
+                       
+   
+                       
                    
               }
+           */   
 	      /*
                   ret = ReceiveMessage(DC_TASKID, &dcpkt, portMAX_DELAY);
 	          if(ret == pdTRUE)

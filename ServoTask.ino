@@ -8,39 +8,65 @@ ER vServoLeft(PCMD_PKT src)
 {
       int i,j;
     
-   servo.write(90);
+   //servo.write(90);
    //vTaskDelay(50/portTICK_RATE_MS);       
    delay(50);
+//   servo.write(70);
    
-   for(j=0;j<3;j++)
+   for(j=70;j>5;j--)
    {
      
-       for(i=90;i<10;i-=1)
+   //    for(i=90;i<10;i-=1)
         {
-          servo.write(i);
+          servo.write(j);
           //vTaskDelay(2 / portTICK_RATE_MS);
-          delay(2);
+          delay(50);
         }
         
        //vTaskDelay(2 / portTICK_RATE_MS);   
-        delay(2);
-        
+//        delay(2);
+  /*      
         for(i=10;i<90 ;i+=1)
         {
           servo.write(i);
          // vTaskDelay(2 / portTICK_RATE_MS);
          delay(2);
         }
+  */        
    }  
-        servo.write(90);
+  //      servo.write(90);
         //vTaskDelay(50/portTICK_RATE_MS);
-        delay(50);  
+  //      delay(50);
+
+   
 }
 
 ER vServoRight(PCMD_PKT src)
 {
       int i,j;
       
+   for(j=5;j<70;j++)
+   {
+     
+   //    for(i=90;i<10;i-=1)
+        {
+          servo.write(j);
+          //vTaskDelay(2 / portTICK_RATE_MS);
+          delay(50);
+        }
+        
+       //vTaskDelay(2 / portTICK_RATE_MS);   
+//        delay(2);
+  /*      
+        for(i=10;i<90 ;i+=1)
+        {
+          servo.write(i);
+         // vTaskDelay(2 / portTICK_RATE_MS);
+         delay(2);
+        }
+  */        
+   }       
+/*      
     servo.write(90);
    //vTaskDelay(50/portTICK_RATE_MS);       
     delay(50);
@@ -68,6 +94,7 @@ ER vServoRight(PCMD_PKT src)
         servo.write(90);
         //vTaskDelay(50/portTICK_RATE_MS);  
         delay(50);
+        */
 }
 
 ER vServoForward(PCMD_PKT src)
@@ -129,13 +156,13 @@ static void ServoTask(void* arg) {
     { 
         val = srvpkt.cmd.SubCMD;
      
-        vTaskSuspendAll();
+    //    vTaskSuspendAll();
          servo.attach(11);
          Haroid_FuncTbl[val](&srvpkt);
          servo.detach();
-        xTaskResumeAll();
+     //   xTaskResumeAll();
 
-        taskYIELD();
+    //    taskYIELD();
         
       // this is very stranged!!!!!!
       // I can't understand.

@@ -253,10 +253,10 @@ static void Protocal_TASK(void* arg) {
                                   wrbPutbyte(ptsyncSt.data[i]);
                                 }
                              } else {
-                               wrbPutbyte(0x00);                   // status
+                            //   wrbPutbyte(0x00);                   // status
                              }
                              
-                             wrbPutbyte(0xFF);                     // postfix
+                          //   wrbPutbyte(0xFF);                     // postfix
                              
                        
                          
@@ -276,7 +276,7 @@ static void Protocal_TASK(void* arg) {
   
          
     } else {
-       wrbPutbyte(0xAA); 
+    //   wrbPutbyte(0xAA); 
     }
    
   
