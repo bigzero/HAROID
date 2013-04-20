@@ -3,16 +3,23 @@
 #include "Queue2.h"
 #include <Servo.h>
 //#include <stdlib.h>
+#ifdef __USE_BLUETOOTH__
 #include <SoftwareSerial.h>
+#endif
+#include <Wire.h>
+
 
 
 // declare & initialize IO
 const uint8_t LED_PIN = LED;            // setting LED
 const uint8_t SPEAKER_PIN = SPEAKER;    // setting buzer
 
+#ifdef __USE_BLUETOOTH__
 const int bluetoothTx = BLUETOOTH_TX;   // setting bluetooth tx(bluetooth side) 
 const int bluetoothRx = BLUETOOTH_RX;   // setting bluetooth rx(bluetooth side)
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
+#endif
+
 //xSemaphoreHandle xSemaphore;
 
  
@@ -183,7 +190,7 @@ MSG_STATUS  SendMessage(ID id, PCMD_PKT cmdpkt)
              
                if(ret == pdFALSE)
                {
-                   wrbPutbyte(0xFF);
+                   //wrbPutbyte(0xFF);
                }
           
    
@@ -227,7 +234,7 @@ static void Protocal_TASK(void* arg) {
 
  while(1)
  {
-   ret = xQueueReceive(hndQueue[PROTOCAL_TASKID], &ptpkt,( 5000 / portTICK_RATE_MS));
+   ret = xQueueReceive(hndQueue[PROTOCAL_TASKID], &ptpkt,( 1000 / portTICK_RATE_MS));
    if(ret == pdTRUE)
    {
 
@@ -276,7 +283,14 @@ static void Protocal_TASK(void* arg) {
   
          
     } else {
-    //   wrbPutbyte(0xAA); 
+      //  vPrintString("Protocal Task : timeout wait\n");
+      static int i=0;
+      
+      DEBUG("Protocal Task : timeout wait\n");
+      i2c_eeprom_write_byte(0x50, 0, 0x18);
+      DEBUG2("I2C",i2c_eeprom_read_byte(0x50, 0));
+      
+     
     }
    
   
@@ -290,11 +304,15 @@ void setup() {
   portBASE_TYPE s1, s2, s3, s4, s5;
 
   Serial.begin(9600);
+  Wire.begin(); // initialise the connection
+
   delay(100);
   pinMode(SPEAKER_PIN, OUTPUT);
   digitalWrite(SPEAKER_PIN,HIGH);
+  
+  #ifdef __USE_BLUETOOTH__
   bluetooth.begin(9600);  
-
+  #endif
 
         pinMode(2, OUTPUT); 
         pinMode(3, INPUT); 
@@ -309,14 +327,20 @@ void setup() {
 
 
   // CAUTION!!!! stack size is very small. so you need a heap approach.
-//  s1 = xTaskCreate(BlueTooth_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+#ifdef __USE_BLUETOOTH__
+  s1 = xTaskCreate(BlueTooth_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+#endif
+
   s2 = xTaskCreate(ServoTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   s3 = xTaskCreate(DcTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   s4 = xTaskCreate(Protocal_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);  
   s5 = xTaskCreate(UART_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);  
-  
- //   hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
-//    if(hndQueue[BLUTOOTH_TASKID] == 0) {}
+
+#ifdef __USE_BLUETOOTH__  
+  hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
+ if(hndQueue[BLUTOOTH_TASKID] == 0) {}
+#endif
+
     hndQueue[PROTOCAL_TASKID] = xQueueCreate( 5, sizeof( PROTOCAL_PKT) );
     hndSyncQueue[PROTOCAL_TASKID] = xQueueCreate( 1, sizeof(SYNC_STRUCT));
     if(hndQueue[PROTOCAL_TASKID] == 0) {}
@@ -343,6 +367,11 @@ void setup() {
   rdbClear();
   wrbClear();
 
+ {
+  char somedata[] = "this is data from the eeprom"; // data to write
+  i2c_eeprom_write_page(0x50, 0, (byte *)somedata, sizeof(somedata)); // write to EEPROM 
+ }
+
 
 
   // start scheduler
@@ -357,3 +386,54 @@ void setup() {
 void loop() {
   // Not used.
 }
+
+
+
+// EEPROM 24LC64 ref : http://playground.arduino.cc/code/I2CEEPROM
+
+void i2c_eeprom_write_byte( int deviceaddress, unsigned int eeaddress, byte data ) {
+    int rdata = data;
+    Wire.beginTransmission(deviceaddress);
+    Wire.write((int)(eeaddress >> 8)); // MSB
+    Wire.write((int)(eeaddress & 0xFF)); // LSB
+    Wire.write(rdata);
+    Wire.endTransmission();
+  }
+
+  // WARNING: address is a page address, 6-bit end will wrap around
+  // also, data can be maximum of about 30 bytes, because the Wire library has a buffer of 32 bytes
+  void i2c_eeprom_write_page( int deviceaddress, unsigned int eeaddresspage, byte* data, byte length ) {
+    Wire.beginTransmission(deviceaddress);
+    Wire.write((int)(eeaddresspage >> 8)); // MSB
+    Wire.write((int)(eeaddresspage & 0xFF)); // LSB
+    byte c;
+    for ( c = 0; c < length; c++)
+      Wire.write(data[c]);
+    Wire.endTransmission();
+  }
+
+  byte i2c_eeprom_read_byte( int deviceaddress, unsigned int eeaddress ) {
+    byte rdata = 0xFF;
+    Wire.beginTransmission(deviceaddress);
+    Wire.write((int)(eeaddress >> 8)); // MSB
+    Wire.write((int)(eeaddress & 0xFF)); // LSB
+    Wire.endTransmission();
+    Wire.requestFrom(deviceaddress,1);
+    if (Wire.available()) rdata = Wire.read();
+    return rdata;
+  }
+
+  // maybe let's not read more than 30 or 32 bytes at a time!
+  void i2c_eeprom_read_buffer( int deviceaddress, unsigned int eeaddress, byte *buffer, int length ) {
+    Wire.beginTransmission(deviceaddress);
+    Wire.write((int)(eeaddress >> 8)); // MSB
+    Wire.write((int)(eeaddress & 0xFF)); // LSB
+    Wire.endTransmission();
+    Wire.requestFrom(deviceaddress,length);
+    int c = 0;
+    for ( c = 0; c < length; c++ )
+      if (Wire.available()) buffer[c] = Wire.read();
+  }
+
+
+

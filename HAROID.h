@@ -5,6 +5,7 @@
 
 #include <FreeRTOS_AVR.h>
 #include "haroid_config.h"
+#include <basic_io_avr.h>
 
 
 typedef int                     ER;
@@ -142,7 +143,14 @@ typedef struct tagSYNC_PKT {
   SYNC_STRUCT syncpkt;
 } SYNC_PKT, *PSYNC_PKT __attribute__((packed));
 
+#define __DEBUG__
 
+#ifdef __DEBUG__
+#define  DEBUG(s)  vPrintString(s)
+#define  DEBUG2(s1,s2) vPrintStringAndNumber(s1, s2);
+#else
+#define  DEBUG(s)
+#endif
 
 
 
