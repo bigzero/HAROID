@@ -4,6 +4,8 @@ ER vCmdIllegal(PCMD_PKT src);
 ER vServoForward(PCMD_PKT src);
 ER vServoLeft(PCMD_PKT src);
 ER vServoRight(PCMD_PKT src);
+ER vServoUpDwon(PCMD_PKT src);
+
 ER testtest(PCMD_PKT src)
 {
  
@@ -121,7 +123,7 @@ ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
   vServoLeft,    // 0x21
   vServoRight,   // 0x22
   vTest,   // 0x23
-  vCmdIllegal,   // 0x24
+  vServoUpDown,   // 0x24
   vCmdIllegal,   // 0x25
   vCmdIllegal,   // 0x26
   vCmdIllegal,   // 0x27

@@ -7,45 +7,12 @@ extern ER (* const Haroid_FuncTbl[255])(PCMD_PKT src);
 ER vServoLeft(PCMD_PKT src)
 {
       int i,j;
-    
+    servo.attach(11);
    //servo.write(90);
    //vTaskDelay(50/portTICK_RATE_MS);       
    delay(50);
 //   servo.write(70);
-   
-   for(j=70;j>5;j--)
-   {
-     
-   //    for(i=90;i<10;i-=1)
-        {
-          servo.write(j);
-          //vTaskDelay(2 / portTICK_RATE_MS);
-          delay(50);
-        }
-        
-       //vTaskDelay(2 / portTICK_RATE_MS);   
-//        delay(2);
-  /*      
-        for(i=10;i<90 ;i+=1)
-        {
-          servo.write(i);
-         // vTaskDelay(2 / portTICK_RATE_MS);
-         delay(2);
-        }
-  */        
-   }  
-  //      servo.write(90);
-        //vTaskDelay(50/portTICK_RATE_MS);
-  //      delay(50);
-
-   
-}
-
-ER vServoRight(PCMD_PKT src)
-{
-      int i,j;
-      
-   for(j=5;j<70;j++)
+   for(j=5;j<90;j++)
    {
      
    //    for(i=90;i<10;i-=1)
@@ -66,6 +33,45 @@ ER vServoRight(PCMD_PKT src)
         }
   */        
    }       
+   servo.detach();
+
+   
+}
+
+ER vServoRight(PCMD_PKT src)
+{
+      int i,j;
+    servo.attach(11);
+
+
+   for(j=90;j>5;j--)
+   {
+     
+   //    for(i=90;i<10;i-=1)
+        {
+          servo.write(j);
+          //vTaskDelay(2 / portTICK_RATE_MS);
+          delay(50);
+        }
+        
+       //vTaskDelay(2 / portTICK_RATE_MS);   
+//        delay(2);
+  /*      
+        for(i=10;i<90 ;i+=1)
+        {
+          servo.write(i);
+         // vTaskDelay(2 / portTICK_RATE_MS);
+         delay(2);
+        }
+  */        
+   } 
+  
+   servo.detach();
+ 
+  //      servo.write(90);
+        //vTaskDelay(50/portTICK_RATE_MS);
+  //      delay(50);
+      
 /*      
     servo.write(90);
    //vTaskDelay(50/portTICK_RATE_MS);       
@@ -95,6 +101,40 @@ ER vServoRight(PCMD_PKT src)
         //vTaskDelay(50/portTICK_RATE_MS);  
         delay(50);
         */
+}
+
+ER vServoUpDown(PCMD_PKT src)
+{
+   int i, j;
+   servo.attach(12);
+   delay(50);
+   
+    for(i=0;i<5;i++)
+    {
+            for(j=10;j<130;j++)
+           {
+             
+           //    for(i=90;i<10;i-=1)
+                {
+                  servo.write(j);
+                  //vTaskDelay(2 / portTICK_RATE_MS);
+                  delay(1);
+                }
+           }
+        
+            for(j=130;j>10;j--)
+           {
+             
+           //    for(i=90;i<10;i-=1)
+                {
+                  servo.write(j);
+                  //vTaskDelay(2 / portTICK_RATE_MS);
+                  delay(1);
+                }
+           }
+    }
+    servo.detach();
+ 
 }
 
 ER vServoForward(PCMD_PKT src)
@@ -156,11 +196,11 @@ static void ServoTask(void* arg) {
     { 
         val = srvpkt.cmd.SubCMD;
      
-    //    vTaskSuspendAll();
-         servo.attach(11);
+     //   vTaskSuspendAll();
+     //    servo.attach(11);
          Haroid_FuncTbl[val](&srvpkt);
-         servo.detach();
-     //   xTaskResumeAll();
+     //    servo.detach();
+     //  xTaskResumeAll();
 
     //    taskYIELD();
         

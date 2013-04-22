@@ -6,7 +6,15 @@
 #ifdef __USE_BLUETOOTH__
 #include <SoftwareSerial.h>
 #endif
-#include <Wire.h>
+
+#include "SoftI2C.h"
+#include "EEPROM24.h"
+
+
+// EEPROM24 : http://rweather.github.io/arduinolibs/classEEPROM24.html
+ SoftI2C i2c(A4, A5);
+ EEPROM24 eeprom0(i2c, EEPROM_24LC64, 0);
+
 
 
 
@@ -133,14 +141,6 @@ static void BlueTooth_TASK(void* arg) {
 
   while(1) {
     vTaskDelay(3000L / portTICK_RATE_MS);
-/*    
-    for(i=0;i<6;i++) {
-      if(Update2(command[i]) == COMPLETE_S) {
-         COMMAND_STRUCT cmd = GetCommand2();
-         SendMessage(&cmd); 
-      }
-    }
-*/
   }
 /*
   while (1) {
@@ -284,13 +284,12 @@ static void Protocal_TASK(void* arg) {
          
     } else {
       //  vPrintString("Protocal Task : timeout wait\n");
-      static int i=0;
-      
-      DEBUG("Protocal Task : timeout wait\n");
-      i2c_eeprom_write_byte(0x50, 0, 0x18);
-      DEBUG2("I2C",i2c_eeprom_read_byte(0x50, 0));
-      
+//      static int i=0;
      
+   #if 0
+     DEBUG2("I2C",eeprom0.read(0));     
+   #endif
+   
     }
    
   
@@ -304,7 +303,6 @@ void setup() {
   portBASE_TYPE s1, s2, s3, s4, s5;
 
   Serial.begin(9600);
-  Wire.begin(); // initialise the connection
 
   delay(100);
   pinMode(SPEAKER_PIN, OUTPUT);
@@ -367,10 +365,6 @@ void setup() {
   rdbClear();
   wrbClear();
 
- {
-  char somedata[] = "this is data from the eeprom"; // data to write
-  i2c_eeprom_write_page(0x50, 0, (byte *)somedata, sizeof(somedata)); // write to EEPROM 
- }
 
 
 
@@ -386,54 +380,6 @@ void setup() {
 void loop() {
   // Not used.
 }
-
-
-
-// EEPROM 24LC64 ref : http://playground.arduino.cc/code/I2CEEPROM
-
-void i2c_eeprom_write_byte( int deviceaddress, unsigned int eeaddress, byte data ) {
-    int rdata = data;
-    Wire.beginTransmission(deviceaddress);
-    Wire.write((int)(eeaddress >> 8)); // MSB
-    Wire.write((int)(eeaddress & 0xFF)); // LSB
-    Wire.write(rdata);
-    Wire.endTransmission();
-  }
-
-  // WARNING: address is a page address, 6-bit end will wrap around
-  // also, data can be maximum of about 30 bytes, because the Wire library has a buffer of 32 bytes
-  void i2c_eeprom_write_page( int deviceaddress, unsigned int eeaddresspage, byte* data, byte length ) {
-    Wire.beginTransmission(deviceaddress);
-    Wire.write((int)(eeaddresspage >> 8)); // MSB
-    Wire.write((int)(eeaddresspage & 0xFF)); // LSB
-    byte c;
-    for ( c = 0; c < length; c++)
-      Wire.write(data[c]);
-    Wire.endTransmission();
-  }
-
-  byte i2c_eeprom_read_byte( int deviceaddress, unsigned int eeaddress ) {
-    byte rdata = 0xFF;
-    Wire.beginTransmission(deviceaddress);
-    Wire.write((int)(eeaddress >> 8)); // MSB
-    Wire.write((int)(eeaddress & 0xFF)); // LSB
-    Wire.endTransmission();
-    Wire.requestFrom(deviceaddress,1);
-    if (Wire.available()) rdata = Wire.read();
-    return rdata;
-  }
-
-  // maybe let's not read more than 30 or 32 bytes at a time!
-  void i2c_eeprom_read_buffer( int deviceaddress, unsigned int eeaddress, byte *buffer, int length ) {
-    Wire.beginTransmission(deviceaddress);
-    Wire.write((int)(eeaddress >> 8)); // MSB
-    Wire.write((int)(eeaddress & 0xFF)); // LSB
-    Wire.endTransmission();
-    Wire.requestFrom(deviceaddress,length);
-    int c = 0;
-    for ( c = 0; c < length; c++ )
-      if (Wire.available()) buffer[c] = Wire.read();
-  }
 
 
 

@@ -44,7 +44,8 @@ static void DcTask(void* arg) {
     	 while(1)
 	 { 
   
-              val2 = analogRead(0);
+              //val2 = analogRead(0);
+               val2 = 200;
              // wrbPutbyte(val2);
               if(val2 > 100)
               {
@@ -62,13 +63,24 @@ static void DcTask(void* arg) {
                
                             HaroidIoControl(ME,
                                                DC_TASKID,
-                                               0x21, 
+                                               0x22, 
                                                NULL,
                                                0,
                                                NULL,
                                                0,
                                                &val,
                                                NOSYNC);    
+ 
+                            HaroidIoControl(ME,
+                                               DC_TASKID,
+                                               0x24, 
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               0,
+                                               &val,
+                                               NOSYNC);    
+ 
                                         
                                          
                                          HaroidIoControl(YOU,
@@ -119,6 +131,7 @@ static void DcTask(void* arg) {
                                 } else {
                                       //    wrbPutbyte(0x28);
                                               // Buzer sound
+                                        DEBUG("Pang wait time out");
                                         HaroidIoControl(ME,
                                                            DC_TASKID,
                                                            0x20, 
@@ -131,18 +144,20 @@ static void DcTask(void* arg) {
                                                            
                                         HaroidIoControl(ME,
                                                        DC_TASKID,
-                                                       0x22, 
+                                                       0x21, 
                                                        NULL,
                                                        0,
                                                        NULL,
                                                        0,
                                                        &val,
-                                                       NOSYNC);                   
+                                                       NOSYNC);
+                                    
+                                    vTaskDelay(5000/portTICK_RATE_MS);                   
                                 }    
               }
    
-   /*
-              flag = 1;   
+/*   
+              flag = 0;   
               if(flag == 1)
               {
                
@@ -171,7 +186,7 @@ static void DcTask(void* arg) {
                                  
                                  wrbPutbyte(val2);
                                  
-                       if(val2 < 150) {
+                       if(val2 < 30 && val2 > 0) {
                                 // Buzer sound
                                 HaroidIoControl(ME,
                                                    DC_TASKID,
@@ -186,15 +201,16 @@ static void DcTask(void* arg) {
                                 
                                 HaroidIoControl(ME,
                                                    DC_TASKID,
-                                                   0x21, 
+                                                   0x24, 
                                                    NULL,
                                                    0,
                                                    NULL,
                                                    0,
                                                    &val,
                                                    NOSYNC);
-                                                   
-
+                       }
+              }                       
+/*
                                 ret =  ReceiveSyncMessage(DC_TASKID, &s_struct, 5000);
                                 if(ret == pdTRUE)
                                 {
