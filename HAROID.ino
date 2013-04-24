@@ -10,6 +10,7 @@
 #include "SoftI2C.h"
 #include "EEPROM24.h"
 
+// TEST
 
 // EEPROM24 : http://rweather.github.io/arduinolibs/classEEPROM24.html
  SoftI2C i2c(A4, A5);
