@@ -17,7 +17,6 @@
 
 
 
-
 // declare & initialize IO
 const uint8_t LED_PIN = LED;            // setting LED
 const uint8_t SPEAKER_PIN = SPEAKER;    // setting buzer
@@ -100,14 +99,8 @@ xQueueHandle hndQueue[TASK_COUNT];
 xQueueHandle hndSyncQueue[TASK_COUNT];
 
 static void UART_TASK(void* arg) {
-  //char buf[11]={0,};
-  int i=0;
-  int j=0;
-//  int cmdParseDone=0;
-  byte toRcv;
-//  COMMAND_STRUCT cntrCMD;
-//  CMD_PKT cmdPkt;
-  PROTOCAL_PKT ptPkt;
+   byte toRcv;
+   static PROTOCAL_PKT ptPkt;
 
   while (1) {
 
@@ -117,6 +110,7 @@ static void UART_TASK(void* arg) {
       rdbPutbyte(toSend);
       //wrbPutbyte(toSend);
       xQueueSend(hndQueue[PROTOCAL_TASKID],&ptPkt, 0 / portTICK_RATE_MS);
+      
     }
      
     if(wrbGetbyte((char*)&toRcv))
@@ -127,7 +121,7 @@ static void UART_TASK(void* arg) {
   }
  }
 
-
+#ifdef __USE_BLUETOOTH__
 static void BlueTooth_TASK(void* arg) {
   //char buf[11]={0,};
   int i=0;
@@ -163,6 +157,7 @@ static void BlueTooth_TASK(void* arg) {
   }
  */ 
 }
+#endif
 
 //CMD_PKT cmdSndPkt;
 
@@ -177,12 +172,12 @@ MSG_STATUS  SendMessage(ID id, PCMD_PKT cmdpkt)
  //        {
               // cmdSndPkt.SendID = PROTOCAL_TASKID;
               // cmdSndPkt.cmd = *cmd;
-               taskENTER_CRITICAL();
+               //taskENTER_CRITICAL();
                ret = pdFALSE;
                
                cmdpkt->SendID = id;
                toSendID = ((cmdpkt->cmd.SubCMD) >> 4) & 0x0F;
-               taskEXIT_CRITICAL() ;
+               //taskEXIT_CRITICAL() ;
 
 
 
@@ -240,12 +235,16 @@ static void Protocal_TASK(void* arg) {
 
        if(rdbGetbyte((char*)&pk) == TRUE)
        {
+           //vTaskSuspendAll();
            pret = Update(pk);
+           //xTaskResumeAll();
+             
            if(pret == COMPLETE_S) {
                  cmdpkt.SendID = PROTOCAL_TASKID;
                  cmdpkt.cmd = GetCommand();
-            
+                 //DEBUG("ok");
                  SendMessage(PROTOCAL_TASKID, &cmdpkt);
+                 
                  if(cmdpkt.cmd.CMD.BIT.sync == 1) {
                      ptret = ReceiveSyncMessage(PROTOCAL_TASKID, &ptsyncSt, 1000);
   
@@ -260,10 +259,10 @@ static void Protocal_TASK(void* arg) {
                                   wrbPutbyte(ptsyncSt.data[i]);
                                 }
                              } else {
-                            //   wrbPutbyte(0x00);                   // status
+                               wrbPutbyte(0x00);                   // status
                              }
                              
-                          //   wrbPutbyte(0xFF);                     // postfix
+                             wrbPutbyte(0xFF);                     // postfix
                              
                        
                          
@@ -285,7 +284,7 @@ static void Protocal_TASK(void* arg) {
     } else {
       //  vPrintString("Protocal Task : timeout wait\n");
 //      static int i=0;
-     
+     ResetParser();
    #if 0
      DEBUG2("I2C",eeprom0.read(0));     
    #endif

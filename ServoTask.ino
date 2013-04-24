@@ -7,6 +7,8 @@ extern ER (* const Haroid_FuncTbl[255])(PCMD_PKT src);
 ER vServoLeft(PCMD_PKT src)
 {
       int i,j;
+
+    vTaskSuspendAll();
     servo.attach(11);
    //servo.write(90);
    //vTaskDelay(50/portTICK_RATE_MS);       
@@ -35,12 +37,14 @@ ER vServoLeft(PCMD_PKT src)
    }       
    servo.detach();
 
-   
+   xTaskResumeAll();
 }
 
 ER vServoRight(PCMD_PKT src)
 {
       int i,j;
+    vTaskSuspendAll();  
+      
     servo.attach(11);
 
 
@@ -101,11 +105,16 @@ ER vServoRight(PCMD_PKT src)
         //vTaskDelay(50/portTICK_RATE_MS);  
         delay(50);
         */
+        
+    xTaskResumeAll();    
 }
 
 ER vServoUpDown(PCMD_PKT src)
 {
    int i, j;
+   
+   vTaskSuspendAll();
+   
    servo.attach(12);
    delay(50);
    
@@ -135,6 +144,7 @@ ER vServoUpDown(PCMD_PKT src)
     }
     servo.detach();
  
+   xTaskResumeAll();
 }
 
 ER vServoForward(PCMD_PKT src)
@@ -143,14 +153,19 @@ ER vServoForward(PCMD_PKT src)
        static SYNC_STRUCT ss;
        ss.Status = 0;
        
-       CompleteSyncMessage(src->SendID , &ss);
+       
+     //  CompleteSyncMessage(src->SendID , &ss);
        
         for(i=0;i<2;i++) {
             pinMode(LED,OUTPUT);
             digitalWrite(LED, LOW);
-            delay(100);
+            // This is very important!!!!
+            // You have to care about "delay" function.
+            //delay(100);
+            vTaskDelay(100/portTICK_RATE_MS);
             digitalWrite(LED, HIGH);
-            delay(100);
+            //delay(100);
+            vTaskDelay(100/portTICK_RATE_MS);
         }
         /*
     servo.write(90);

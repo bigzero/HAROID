@@ -24,7 +24,7 @@ typedef SDWORD			FIXED;				// fixed point
 #define NULL    0
 #define TRUE    1
 #define FALSE   0
-#define BUFF_SIZE (12)
+#define BUFF_SIZE (24)
 
 
 #define E_OK        0       /* Normal Completion */
@@ -96,7 +96,7 @@ typedef struct tagCOMMAND_STRUCT {
 typedef struct tagSYNC_STRUCT {
   char  Status; // 1:ok, 0: fail
   char  length; // data length
-  char data[4]; // data : max 256 . but you have to care a RAM 2K size.
+  char data[8]; // data : max 256 . but you have to care a RAM 2K size.
 } SYNC_STRUCT, *PSYNC_STRUCT __attribute__((packed));
 
 
@@ -165,6 +165,7 @@ typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POS
 
 extern "C" PARSER_STATUS Update(char pk) ;
 extern "C" COMMAND_STRUCT GetCommand(void);
+extern "C" void ResetParser(void);
 
 extern "C" PARSER_STATUS Update2(char pk);
 extern "C" COMMAND_STRUCT GetCommand2(void);

@@ -214,6 +214,7 @@ class CParser
     
   PARSER_STATUS Update(char pk);
   void NextState(STATE_ID st);
+  void ResetState();
 
   void State_Prefix();
   void State_Cmd();

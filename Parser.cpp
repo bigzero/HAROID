@@ -359,6 +359,11 @@ void CParser::ChangeState(CState* pNewState)
   m_pState = pNewState;
 };    
 
+void CParser::ResetState()
+{  
+  State_Prefix();
+};    
+
 
 CParser gParser1;
 extern "C" PARSER_STATUS Update(char pk) {
@@ -367,6 +372,9 @@ extern "C" PARSER_STATUS Update(char pk) {
 extern "C" COMMAND_STRUCT GetCommand(void) {
   return gParser1.m_cmdPkt;
 };
+extern "C" void ResetParser(void) {
+   gParser1.ResetState(); 
+}
 
 CParser gParser2;
 extern "C" PARSER_STATUS Update2(char pk) {

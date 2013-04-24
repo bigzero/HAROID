@@ -43,7 +43,7 @@ static void DcTask(void* arg) {
           
     	 while(1)
 	 { 
-  
+#if 1  
               //val2 = analogRead(0);
                val2 = 200;
              // wrbPutbyte(val2);
@@ -131,7 +131,7 @@ static void DcTask(void* arg) {
                                 } else {
                                       //    wrbPutbyte(0x28);
                                               // Buzer sound
-                                        DEBUG("Pang wait time out");
+                                   //     DEBUG("Pang wait time out");
                                         HaroidIoControl(ME,
                                                            DC_TASKID,
                                                            0x20, 
@@ -259,7 +259,9 @@ static void DcTask(void* arg) {
                        taskYIELD();
 	  	   }
               */
-                               
+
+#endif                               
               vTaskDelay(1000/portTICK_RATE_MS);
+
 	 } 
 }
