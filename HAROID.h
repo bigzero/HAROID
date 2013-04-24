@@ -52,7 +52,7 @@ typedef portBASE_TYPE MSG_STATUS;
 
 // User task declaration.
 static void ServoTask(void* arg);
-static void DcTask(void* arg);
+static void RoseTask(void* arg);
 //-------------------end  USER setting area-----------------------------------
 typedef	 union	{							//Command structure
 		BYTE	cmd;							//BYTE access
@@ -162,6 +162,9 @@ typedef struct tagPRTCL {
 
 typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S,
                                   SYNC_LENGTH_S, SYNC_PAYLOAD_S, SYNC_POSTFIX_S, SYNC_COMPLETE_S, SYNC_FAIL_S } PARSER_STATUS;
+
+typedef enum  ROSE_STATE_ID {ROSE_SLEEP_S, ROSE_READY_S, ROSE_MISSION_1_S, ROSE_MISSION_2_S } ROSE_STATUS;
+
 
 extern "C" PARSER_STATUS Update(char pk) ;
 extern "C" COMMAND_STRUCT GetCommand(void);
