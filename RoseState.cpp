@@ -1,3 +1,5 @@
+#include "HAROID.h"
+#include "Queue2.h"
 #include "RoseState.h"
 
 
@@ -11,11 +13,24 @@ ROSE_STATE_ID CRoseState::GetState(void)
   return m_stateID;  
 };
 
-
+byte val;
 ROSE_STATE_ID CRoseSleepState::Do(char no) {
-       DEBUG2("Sleep",no);
+   wrbPutbyte(no);
+  
+    //   DEBUG2("Sleep",no);
   if(no == 5)
     {
+
+        HaroidIoControl(ME,
+                           DC_TASKID,
+                           0x22, 
+                           NULL,
+                           0,
+                           NULL,
+                           0,
+                           &val,
+                           NOSYNC);    
+
       
        m_RoseMgr->RoseState_Ready();
       return ROSE_READY_S;
@@ -29,7 +44,11 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
  };
  
  ROSE_STATE_ID CRoseReadyState::Do(char no) {
-        DEBUG2("Ready",no);
+   //byte val;  
+  // DEBUG2("Ready",no);
+   wrbPutbyte(no);        
+        
+        
   if(no == 1)
     {
        m_RoseMgr->RoseState_Mission1();
@@ -40,9 +59,26 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
       
      m_RoseMgr->RoseState_Mission2();
       return ROSE_MISSION_2_S;
+    } else if(no == 5) {
+ 
+      HaroidIoControl(ME,
+                       DC_TASKID,
+                       0x21, 
+                       NULL,
+                       0,
+                       NULL,
+                       0,
+                       &val,
+                       NOSYNC);    
+
+  
+      m_RoseMgr->RoseState_Sleep();
+      return ROSE_MISSION_2_S;
+      
     }
     else {
       // You selected a wrong number
+ 
  
       m_RoseMgr->RoseState_Ready();
       return ROSE_READY_S;

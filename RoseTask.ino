@@ -83,7 +83,7 @@ static void RoseTask(void* arg) {
            attachInterrupt(0, DetectApplauseIsr, FALLING);
            st = xQueueReceive(hndApplauseQueue, (char*) &count ,portMAX_DELAY );
            if(st == pdTRUE) {
-             st = xQueueReceive(hndApplauseQueue, (char*) &count ,( 3000 / portTICK_RATE_MS));
+             st = xQueueReceive(hndApplauseQueue, (char*) &count ,( 4000 / portTICK_RATE_MS));
              roseMgr.m_pState->Do(ApplauseCount);
            }
            
@@ -93,9 +93,9 @@ static void RoseTask(void* arg) {
          } else if(roseMgr.m_pState->GetState() == ROSE_READY_S) {
            
            attachInterrupt(0, DetectApplauseIsr, FALLING);
-           st = xQueueReceive(hndApplauseQueue, (char*) &count , ( 1000 / portTICK_RATE_MS));
+           st = xQueueReceive(hndApplauseQueue, (char*) &count , ( 2000 / portTICK_RATE_MS));
            if(st == pdTRUE) {
-               st = xQueueReceive(hndApplauseQueue, (char*) &count ,( 3000 / portTICK_RATE_MS));
+               st = xQueueReceive(hndApplauseQueue, (char*) &count ,( 4000 / portTICK_RATE_MS));
                roseMgr.m_pState->Do(ApplauseCount); 
          } else {
                roseMgr.m_pState->Do(0);
