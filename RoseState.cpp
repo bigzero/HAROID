@@ -13,8 +13,10 @@ ROSE_STATE_ID CRoseState::GetState(void)
 
 
 ROSE_STATE_ID CRoseSleepState::Do(char no) {
+       DEBUG2("Sleep",no);
   if(no == 5)
     {
+      
        m_RoseMgr->RoseState_Ready();
       return ROSE_READY_S;
     }
@@ -27,6 +29,7 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
  };
  
  ROSE_STATE_ID CRoseReadyState::Do(char no) {
+        DEBUG2("Ready",no);
   if(no == 1)
     {
        m_RoseMgr->RoseState_Mission1();
@@ -48,7 +51,7 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
 
  ROSE_STATE_ID CRoseMission1State::Do(char no) {
       //Do your job 
-
+      DEBUG("Mission1\n");
 
       m_RoseMgr->RoseState_Ready();
       return ROSE_READY_S;
@@ -57,7 +60,7 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
 
  ROSE_STATE_ID CRoseMission2State::Do(char no) {
      //Do your job
-
+     DEBUG("Mission2\n");
 
       m_RoseMgr->RoseState_Ready();
       return ROSE_READY_S;
@@ -97,4 +100,6 @@ void CRoseManager::ResetState()
 {  
   RoseState_Ready();
 };    
+
+
 

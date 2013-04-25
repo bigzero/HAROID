@@ -80,7 +80,7 @@ class CRoseManager
     ~CRoseManager();
     
    
-  ROSE_STATUS Update(void);
+  ROSE_STATUS Update(char cnt);
   void NextState(ROSE_STATE_ID st);
   void ResetState();
 
@@ -90,7 +90,7 @@ class CRoseManager
   void RoseState_Mission1();
   void RoseState_Mission2();
    
-  protected:
+  public:
     CRoseState *m_pState;
     void ChangeState(CRoseState* pNewState);
     
