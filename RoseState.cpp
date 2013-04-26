@@ -2,8 +2,24 @@
 #include "Queue2.h"
 #include "RoseState.h"
 
+extern "C" const char RosePersonality[6][6] = {
+  {0xFF,0x0E,0xFF,0x60,0x00,0xFF},
+  {0xFF,0x0E,0xFF,0x61,0x00,0xFF},
+  {0xFF,0x0E,0xFF,0x62,0x00,0xFF},
+  {0xFF,0x0E,0xFF,0x63,0x00,0xFF},
+  {0xFF,0x0E,0xFF,0x64,0x00,0xFF},
+  {0xFF,0x0E,0xFF,0x65,0x00,0xFF}
+};
 
-
+void RosePersonalityRequest(const char *rose) {
+  int i;
+  for(i=0;i<6;i++) {
+      wrbPutbyte(rose[i]);
+  }
+};
+  
+  
+  
 CRoseState::~CRoseState() 
 {
 };
@@ -15,11 +31,13 @@ ROSE_STATE_ID CRoseState::GetState(void)
 
 byte val;
 ROSE_STATE_ID CRoseSleepState::Do(char no) {
-   wrbPutbyte(no);
+  // wrbPutbyte(no);
   
-    //   DEBUG2("Sleep",no);
+     DEBUG2("Sleep",no);
   if(no == 5)
     {
+
+        DEBUG2("Exit Sleep Mode",no);
 
         HaroidIoControl(ME,
                            DC_TASKID,
@@ -45,8 +63,8 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
  
  ROSE_STATE_ID CRoseReadyState::Do(char no) {
    //byte val;  
-  // DEBUG2("Ready",no);
-   wrbPutbyte(no);        
+   DEBUG2("Ready",no);
+   //wrbPutbyte(no);        
         
         
   if(no == 1)
@@ -60,6 +78,8 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
      m_RoseMgr->RoseState_Mission2();
       return ROSE_MISSION_2_S;
     } else if(no == 5) {
+
+      DEBUG2("Enter Sleep Mode",no);
  
       HaroidIoControl(ME,
                        DC_TASKID,
@@ -73,7 +93,7 @@ ROSE_STATE_ID CRoseSleepState::Do(char no) {
 
   
       m_RoseMgr->RoseState_Sleep();
-      return ROSE_MISSION_2_S;
+      return ROSE_SLEEP_S;
       
     }
     else {

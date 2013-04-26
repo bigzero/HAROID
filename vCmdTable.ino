@@ -135,7 +135,7 @@ ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
   vCmdIllegal,   // 0x2D
   vCmdIllegal,   // 0x2E  
   vCmdIllegal,   // 0x2F
-  vDcForward,    // 0x30
-  vDcReverse,    // 0x31
+  vCmdIllegal,    // 0x30
+  vCmdIllegal,    // 0x31
   
 };

@@ -29,6 +29,33 @@ SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
 //xSemaphoreHandle xSemaphore;
 
+
+void DebugPrint(const char *str) {
+  vTaskSuspendAll();
+  while (1) {
+    unsigned char c = *(str++);
+    if (c == 0) break;
+    wrbPutbyte(c);
+  } 
+  
+  xTaskResumeAll();
+  
+}
+
+void DebugPrint2(const char *str, int no) {
+  vTaskSuspendAll();
+  while (1) {
+    unsigned char c = *(str++);
+    if (c == 0) break;
+    wrbPutbyte(c);
+  } 
+  wrbPutbyte(' ');
+  wrbPutbyte(char(no +'0'));
+  wrbPutbyte('\n');  
+  xTaskResumeAll();
+  
+}
+
  
 MSG_STATUS HaroidIoControl(TO who,
                      ID id,

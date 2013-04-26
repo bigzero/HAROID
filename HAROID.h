@@ -145,11 +145,14 @@ typedef struct tagSYNC_PKT {
 
 #define __DEBUG__
 
+void DebugPrint(const char *);
+void DebugPrint2(const char *,int );
 #ifdef __DEBUG__
-#define  DEBUG(s)  vPrintString(s)
-#define  DEBUG2(s1,s2) vPrintStringAndNumber(s1, s2);
+#define  DEBUG(s)  DebugPrint(s)
+#define  DEBUG2(s,n) DebugPrint2(s,n)
 #else
 #define  DEBUG(s)
+#define  DEBUG2(s,n)
 #endif
 
 
