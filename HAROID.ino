@@ -84,7 +84,7 @@ MSG_STATUS HaroidIoControl(TO who,
        HCret = SendMessage(id, &HCcmd);
    
        if(syntype == SYNC) {
-           HCret = ReceiveSyncMessage(id, &HCsyncSt, 100);
+           HCret = ReceiveSyncMessage(id, &HCsyncSt, 30000);
            if(HCret == pdTRUE) {
                if(HCsyncSt.Status == 0) {  // fail
                    HCret = pdFALSE;
@@ -230,12 +230,13 @@ MSG_STATUS ReceiveMessage(ID id, PCMD_PKT pkt, int ms)
 
 MSG_STATUS ReceiveSyncMessage(ID id, PSYNC_STRUCT pkt, int ms)
 {
+   Serial.println("TTT");
    return xQueueReceive(hndSyncQueue[id], (PSYNC_STRUCT) pkt,( ms / portTICK_RATE_MS)); 
 }
 
 MSG_STATUS CompleteSyncMessage(ID id, PSYNC_STRUCT pkt)
 {
-  return xQueueSend(hndSyncQueue[id], pkt, 0 / portTICK_RATE_MS);
+  return xQueueSend(hndSyncQueue[id], pkt, 2000 / portTICK_RATE_MS);
 }
 
 
@@ -250,7 +251,7 @@ static void Protocal_TASK(void* arg) {
  
   byte pk;
   portBASE_TYPE ret;
-  BYTE nSize;
+//  BYTE nSize;
   BYTE i;
 
 
@@ -326,20 +327,28 @@ static void Protocal_TASK(void* arg) {
 
 
 void setup() {
-  portBASE_TYPE s1, s2, s3, s4, s5;
+  static portBASE_TYPE s1, s2, s3, s4, s5;
 
   Serial.begin(9600);
 
   delay(100);
   pinMode(SPEAKER_PIN, OUTPUT);
   digitalWrite(SPEAKER_PIN,HIGH);
+
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT); 
+  pinMode(LED3, OUTPUT);
+  pinMode(LED4, OUTPUT);  
+
+
   
   #ifdef __USE_BLUETOOTH__
   bluetooth.begin(9600);  
   #endif
 
-        pinMode(2, OUTPUT); 
-        pinMode(3, INPUT); 
+      // ultra sonic sensor
+        pinMode(2, OUTPUT);   // Trigger
+        pinMode(3, INPUT);    // Echo
 
 
   //xSemaphore = xSemaphoreCreateMutex();
@@ -353,39 +362,49 @@ void setup() {
   // CAUTION!!!! stack size is very small. so you need a heap approach.
 #ifdef __USE_BLUETOOTH__
   s1 = xTaskCreate(BlueTooth_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+#else
+//  s1 = xTaskCreate(ETC_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 #endif
+  
+  s2 = xTaskCreate(ServoTask, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);
+  s3 = xTaskCreate(RoseTask, NULL, configMINIMAL_STACK_SIZE+400, NULL, 1, NULL);
+  s4 = xTaskCreate(Protocal_TASK, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);  
+  s5 = xTaskCreate(UART_TASK, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);  
 
-  s2 = xTaskCreate(ServoTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-  s3 = xTaskCreate(RoseTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-  s4 = xTaskCreate(Protocal_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);  
-  s5 = xTaskCreate(UART_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);  
 
 #ifdef __USE_BLUETOOTH__  
   hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
  if(hndQueue[BLUTOOTH_TASKID] == 0) {}
+#else
+//  hndQueue[ETC_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
+// if(hndQueue[ETC_TASKID] == 0) {}
 #endif
 
     hndQueue[PROTOCAL_TASKID] = xQueueCreate( 5, sizeof( PROTOCAL_PKT) );
     hndSyncQueue[PROTOCAL_TASKID] = xQueueCreate( 1, sizeof(SYNC_STRUCT));
     if(hndQueue[PROTOCAL_TASKID] == 0) {}
     if(hndSyncQueue[PROTOCAL_TASKID] == 0) {}
-    
+
     hndQueue[SERVO_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
     hndSyncQueue[SERVO_TASKID] = xQueueCreate( 1, sizeof(SYNC_STRUCT) );
     if(hndQueue[SERVO_TASKID] == 0) {}
     if(hndSyncQueue[SERVO_TASKID] == 0) {}
-
-    hndQueue[DC_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT) );
-    hndSyncQueue[DC_TASKID] = xQueueCreate( 1, sizeof( SYNC_STRUCT) );
-    if(hndQueue[DC_TASKID] == 0) {}
-    if(hndSyncQueue[DC_TASKID] == 0) {}
 
      hndQueue[UART_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
      hndSyncQueue[UART_TASKID] = xQueueCreate( 1, sizeof( SYNC_STRUCT ) );
     if(hndQueue[UART_TASKID] == 0) {}   
     if(hndSyncQueue[UART_TASKID] == 0) {}   
 
-    
+
+
+
+    hndQueue[ROSE_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT) );
+
+    hndSyncQueue[ROSE_TASKID] = xQueueCreate( 3, sizeof( SYNC_STRUCT) );
+    if(hndQueue[ROSE_TASKID] == 0) {}
+    if(hndSyncQueue[ROSE_TASKID] == 0) {}
+
+  
     
   // Queue Initialize
   rdbClear();
@@ -407,5 +426,58 @@ void loop() {
   // Not used.
 }
 
+
+
+float cm2;
+byte FrontObject=0;
+void MeasureDistance(void) 
+{
+  const int TrigPin = 2; 
+  const int EchoPin = 3; 
+
+      // 1step , The ultra sonic sensor is used. 
+
+    
+    vTaskSuspendAll();
+ 
+    digitalWrite(TrigPin, LOW);  
+    delayMicroseconds(2); 
+    digitalWrite(TrigPin, HIGH); 
+    delayMicroseconds(10); 
+    digitalWrite(TrigPin, LOW); 
+
+    
+    cm2 = pulseIn(EchoPin, HIGH) / 58.0; 
+
+    xTaskResumeAll();
+
+    
+    cm2 = (int(cm2 * 100.0)) / 100.0;  
+    
+    Serial.println(cm2);
+    
+    if(cm2 < 100) {
+         FrontObject = 1; 
+    }
+
+    
+
+}
+
+
+
+
+/*
+static void ETC_TASK(void* arg) {
+ 
+  
+  while(1) {
+    
+    vTaskDelay(3000L / portTICK_RATE_MS);
+//    MeasureDistance();
+  }
+
+}
+*/
 
 

@@ -19,7 +19,7 @@ class CRoseState
     ~CRoseState();
     ROSE_STATE_ID GetState(void);
     
-    virtual ROSE_STATE_ID Do(char no)=0;
+    virtual ROSE_STATE_ID Do(void)=0;
 };
 
 class CRoseSleepState : CRoseState
@@ -31,7 +31,7 @@ class CRoseSleepState : CRoseState
     CRoseSleepState(CRoseManager *mgr):CRoseState(ROSE_SLEEP_S), m_RoseMgr(mgr)
     {};
     ~CRoseSleepState();
-    ROSE_STATE_ID Do(char no);
+    ROSE_STATE_ID Do(void);
 };
 
 class CRoseReadyState : CRoseState
@@ -43,8 +43,22 @@ class CRoseReadyState : CRoseState
     CRoseReadyState(CRoseManager *mgr):CRoseState(ROSE_READY_S), m_RoseMgr(mgr)
     {};
     ~CRoseReadyState();
-    ROSE_STATE_ID Do(char no);
+    ROSE_STATE_ID Do(void);
 };
+
+class CRoseWakeupState : CRoseState
+{
+  public:
+    CRoseManager *m_RoseMgr;
+
+    //CPrefixState():CState(PREFIX_S) {};
+    CRoseWakeupState(CRoseManager *mgr):CRoseState(ROSE_WAKEUP_S), m_RoseMgr(mgr)
+    {};
+    ~CRoseWakeupState();
+    ROSE_STATE_ID Do(void);
+};
+
+
 
 class CRoseMission1State : CRoseState
 {
@@ -55,7 +69,7 @@ class CRoseMission1State : CRoseState
     CRoseMission1State(CRoseManager *mgr):CRoseState(ROSE_MISSION_1_S), m_RoseMgr(mgr)
     {};
     ~CRoseMission1State();
-    ROSE_STATE_ID Do(char no);
+    ROSE_STATE_ID Do(void);
 };
 
 class CRoseMission2State : CRoseState
@@ -67,7 +81,7 @@ class CRoseMission2State : CRoseState
     CRoseMission2State(CRoseManager *mgr):CRoseState(ROSE_MISSION_2_S), m_RoseMgr(mgr)
     {};
     ~CRoseMission2State();
-    ROSE_STATE_ID Do(char no);
+    ROSE_STATE_ID Do(void);
 };
 
 
@@ -86,7 +100,7 @@ class CRoseManager
 
   void RoseState_Sleep();
   void RoseState_Ready();
-
+  void RoseState_Wakeup();
   void RoseState_Mission1();
   void RoseState_Mission2();
    

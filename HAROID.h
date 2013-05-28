@@ -2,7 +2,6 @@
 #define __HAROID_H__
 
 #define MEM_USE_POOLS
-
 #include <FreeRTOS_AVR.h>
 #include "haroid_config.h"
 #include <basic_io_avr.h>
@@ -21,10 +20,10 @@ typedef signed long		SDWORD;				// signed 32bit value
 typedef SDWORD			FIXED;				// fixed point
 
 
-#define NULL    0
+//#define NULL    0
 #define TRUE    1
 #define FALSE   0
-#define BUFF_SIZE (24)
+#define BUFF_SIZE (18)
 
 
 #define E_OK        0       /* Normal Completion */
@@ -35,24 +34,25 @@ typedef SDWORD			FIXED;				// fixed point
 
 // The number 0,1 is system id. So you dont have to change the number.
 #define BLUTOOTH_TASKID  0  // Bluetooth is a default channel.
+#define ETC_TASKID       0
 #define PROTOCAL_TASKID  1  // 
 
 //-------------------begin USER setting area---------------------------------
-#define TASK_COUNT 4        // You must set a TASK count.
+#define TASK_COUNT 5        // You must set a TASK count.
 // from number 2, it is user id. You can set a arbitrary number.
 #define SERVO_TASKID     2
-#define DC_TASKID        3
+#define ROSE_TASKID        3
 #define UART_TASKID      4
 
-typedef char ID;
+typedef int ID;
 typedef enum tagTO { ME, YOU } TO;
 typedef enum tagSYNCTYPE { NOSYNC, SYNC } SYNCTYPE;
 
 typedef portBASE_TYPE MSG_STATUS;
 
 // User task declaration.
-static void ServoTask(void* arg);
-static void RoseTask(void* arg);
+//static void ServoTask(void* arg);
+//static void RoseTask(void* arg);
 //-------------------end  USER setting area-----------------------------------
 typedef	 union	{							//Command structure
 		BYTE	cmd;							//BYTE access
@@ -91,13 +91,13 @@ typedef struct tagCOMMAND_STRUCT {
   char   SubCMD;    //
   char   length;    //payload length
   char   payload[8];  // payload : max 256 . but you have to care a RAM 2K size.
-} COMMAND_STRUCT, *PCOMMAND_STRUCT __attribute__((packed));
+}  __attribute__((packed)) COMMAND_STRUCT, *PCOMMAND_STRUCT;
 
 typedef struct tagSYNC_STRUCT {
   char  Status; // 1:ok, 0: fail
   char  length; // data length
   char data[8]; // data : max 256 . but you have to care a RAM 2K size.
-} SYNC_STRUCT, *PSYNC_STRUCT __attribute__((packed));
+}  __attribute__((packed)) SYNC_STRUCT, *PSYNC_STRUCT;
 
 
 typedef union tagW_DEVICE_DATA {
@@ -109,7 +109,7 @@ typedef union tagW_DEVICE_DATA {
   struct {
     DWORD dword;
   } DWORD_DATA;
-} DEVICE_DATA __attribute__((packed));
+} __attribute__((packed)) DEVICE_DATA ;
 
 
 
@@ -120,7 +120,7 @@ typedef struct tagW_DEVICE_STRUCT {
   char   length;    // 5,6,8
   unsigned short int addr;  // payload
   DEVICE_DATA data;  
-} W_DEVICE_STRUCT, *PW_DEVICE_STRUCT __attribute__((packed));
+} __attribute__((packed)) W_DEVICE_STRUCT, *PW_DEVICE_STRUCT ;
 
 typedef  struct tagR_DEVICE_STRUCT {
   T_CMD   CMD;       
@@ -129,19 +129,20 @@ typedef  struct tagR_DEVICE_STRUCT {
   char   length;    // 8
   unsigned short int addr;  // payload
   char len;   // 1,2,4
-} R_DEVICE_STRUCT, *PR_DEVICE_STRUCT __attribute__((packed));
+} __attribute__((packed)) R_DEVICE_STRUCT, *PR_DEVICE_STRUCT ;
 
 
 
 typedef struct tagCMD_PKT {
   char  SendID;
   COMMAND_STRUCT cmd;
-} CMD_PKT, *PCMD_PKT __attribute__((packed));
+}  __attribute__((packed)) CMD_PKT, *PCMD_PKT;
 
 typedef struct tagSYNC_PKT {
   char  SendID;
   SYNC_STRUCT syncpkt;
-} SYNC_PKT, *PSYNC_PKT __attribute__((packed));
+} __attribute__((packed)) SYNC_PKT, *PSYNC_PKT ;
+
 
 #define __DEBUG__
 
@@ -161,12 +162,12 @@ void DebugPrint2(const char *,int );
 typedef struct tagPRTCL {
    char  SendID;
    char pkt;
-} PROTOCAL_PKT, PPROTOCAL_PKT __attribute__((packed));
+}  __attribute__((packed)) PROTOCAL_PKT, PPROTOCAL_PKT;
 
 typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S,
                                   SYNC_LENGTH_S, SYNC_PAYLOAD_S, SYNC_POSTFIX_S, SYNC_COMPLETE_S, SYNC_FAIL_S } PARSER_STATUS;
 
-typedef enum  ROSE_STATE_ID {ROSE_SLEEP_S, ROSE_READY_S, ROSE_MISSION_1_S, ROSE_MISSION_2_S } ROSE_STATUS;
+typedef enum  ROSE_STATE_ID {ROSE_SLEEP_S, ROSE_READY_S, ROSE_WAKEUP_S, ROSE_MISSION_1_S, ROSE_MISSION_2_S } ROSE_STATUS;
 
 
 extern "C" PARSER_STATUS Update(char pk) ;
