@@ -367,7 +367,7 @@ void setup() {
 #endif
   
   s2 = xTaskCreate(ServoTask, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);
-  s3 = xTaskCreate(RoseTask, NULL, configMINIMAL_STACK_SIZE+400, NULL, 1, NULL);
+  s3 = xTaskCreate(RoseTask, NULL, configMINIMAL_STACK_SIZE+800, NULL, 1, NULL);
   s4 = xTaskCreate(Protocal_TASK, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);  
   s5 = xTaskCreate(UART_TASK, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);  
 
@@ -453,7 +453,7 @@ void MeasureDistance(void)
 
     
     cm2 = (int(cm2 * 100.0)) / 100.0;  
-    
+    cm2 = abs(cm2);
     Serial.println(cm2);
     
     if(cm2 < 100) {

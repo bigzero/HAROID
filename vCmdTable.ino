@@ -1,13 +1,11 @@
 
 ER vCmdIllegal(PCMD_PKT src);
 // ServoTask Command
-ER vServoSleepAction(PCMD_PKT src);
 ER vServoForward(PCMD_PKT src);
 ER vServoLeft(PCMD_PKT src);
 ER vServoRight(PCMD_PKT src);
 ER vServoUpDwon(PCMD_PKT src);
-ER vCdsRecognition(PCMD_PKT src);
-ER vServoWakeup(PCMD_PKT src);
+//ER vCdsRecognition(PCMD_PKT src);
 
 ER testtest(PCMD_PKT src)
 {
@@ -122,13 +120,13 @@ ER (* const Haroid_FuncTbl[])(PCMD_PKT src) = {
   vCmdIllegal,   // 0x1D
   vCmdIllegal,   // 0x1E
   vCmdIllegal,   // 0x1F
-  vServoSleepAction,   // 0x20
+  vCmdIllegal,   // 0x20
   vServoLeft,    // 0x21
   vServoRight,   // 0x22
-  vServoWakeup,   // 0x23
+  vCmdIllegal,   // 0x23
   vServoUpDown,   // 0x24
   vServoForward,   // 0x25
-  vCdsRecognition,   // 0x26
+  vCmdIllegal,   // 0x26
   vCmdIllegal,   // 0x27
   vCmdIllegal,   // 0x28
   vCmdIllegal,   // 0x29

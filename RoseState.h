@@ -84,7 +84,17 @@ class CRoseMission2State : CRoseState
     ROSE_STATE_ID Do(void);
 };
 
+class CRoseASleepState : CRoseState
+{
+  public:
+    CRoseManager *m_RoseMgr;
 
+    //CPrefixState():CState(PREFIX_S) {};
+    CRoseASleepState(CRoseManager *mgr):CRoseState(ROSE_ASLEEP_S), m_RoseMgr(mgr)
+    {};
+    ~CRoseASleepState();
+    ROSE_STATE_ID Do(void);
+};
 
 class CRoseManager 
 {
@@ -103,6 +113,7 @@ class CRoseManager
   void RoseState_Wakeup();
   void RoseState_Mission1();
   void RoseState_Mission2();
+  void RoseState_ASleep();
    
   public:
     CRoseState *m_pState;

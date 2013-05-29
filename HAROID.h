@@ -149,8 +149,11 @@ typedef struct tagSYNC_PKT {
 void DebugPrint(const char *);
 void DebugPrint2(const char *,int );
 #ifdef __DEBUG__
-#define  DEBUG(s)  DebugPrint(s)
-#define  DEBUG2(s,n) DebugPrint2(s,n)
+//#define  DEBUG(s)  DebugPrint(s)
+//#define  DEBUG2(s,n) DebugPrint2(s,n)
+#define  DEBUG(s)  Serial.println(s)
+#define  DEBUG2(s,n) {Serial.print(s);Serial.println(n)}
+
 #else
 #define  DEBUG(s)
 #define  DEBUG2(s,n)
@@ -167,7 +170,7 @@ typedef struct tagPRTCL {
 typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S,
                                   SYNC_LENGTH_S, SYNC_PAYLOAD_S, SYNC_POSTFIX_S, SYNC_COMPLETE_S, SYNC_FAIL_S } PARSER_STATUS;
 
-typedef enum  ROSE_STATE_ID {ROSE_SLEEP_S, ROSE_READY_S, ROSE_WAKEUP_S, ROSE_MISSION_1_S, ROSE_MISSION_2_S } ROSE_STATUS;
+typedef enum  ROSE_STATE_ID {ROSE_SLEEP_S, ROSE_READY_S, ROSE_WAKEUP_S, ROSE_MISSION_1_S, ROSE_MISSION_2_S , ROSE_ASLEEP_S} ROSE_STATUS;
 
 
 extern "C" PARSER_STATUS Update(char pk) ;

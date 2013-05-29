@@ -12,12 +12,23 @@ complex_t bfly_buff[FFT_N];		/* FFT buffer */
 uint16_t spektrum[FFT_N/2];		/* Spectrum output buffer */
 uint16_t sex[4]; // 12,13,14,15
 
+
+byte __ADMUX__;
+byte __ADCSRA__;
+
+
 void FftInit()
 {
   //Serial.begin(57600);
   adcInit();
   adcCalb();
   establishContact();  // send a byte to establish contact until Processing respon
+}
+
+void FftExit()
+{
+    ADMUX = __ADMUX__;
+    ADCSRA = __ADCSRA__ ; 
 }
 
 int Fftloop()
@@ -88,7 +99,12 @@ ISR(ADC_vect)
 
   position++;
 }
+
+
 void adcInit(){
+   __ADMUX__ = ADMUX;
+   __ADCSRA__ = ADCSRA;
+ 
   /*  REFS0 : VCC use as a ref, IR_AUDIO : channel selection, ADEN : ADC Enable, ADSC : ADC Start, ADATE : ADC Auto Trigger Enable, ADIE : ADC Interrupt Enable,  ADPS : ADC Prescaler  */
   // free running ADC mode, f = ( 16MHz / prescaler ) / 13 cycles per conversion 
   ADMUX = _BV(REFS0) | IR_AUDIO; // | _BV(ADLAR); 
