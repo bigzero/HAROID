@@ -19,10 +19,10 @@ extern "C" const char HAROPANG_ACTIVITY[6][6] = {
 #define HAROPANG_ACTIVITY_WOMAN          2
 #define HAROPANG_ACTIVITY_GOOD_BYE       3
 
-void FIRE_TO_HAROPANG(const char *rose) {
+void __FIRE_TO_HAROPANG(int act) {
   int i;
   for(i=0;i<6;i++) {
-      wrbPutbyte(rose[i]);
+      wrbPutbyte(HAROPANG_ACTIVITY[act][i]);
   }
 };
   
@@ -224,7 +224,7 @@ ROSE_STATE_ID CRoseSleepState::Do(void) {
    ROSE_STATUS st = ROSE_READY_S;
 //    static int mission = 0;
    
-   //DEBUG("Ready");
+   DEBUG("Ready");
         ret = vCdsRecognition();   
     
        //ret = xQueueReceive(hndHeartbitQueue, (char*) &count ,15000 / portTICK_RATE_MS );
@@ -248,9 +248,11 @@ ROSE_STATE_ID CRoseWakeupState::Do(void) {
       //Do your job
       MSG_STATUS st;
        
-      DEBUG("Wakeup\n");
+      DEBUG("Wakeup");
       
-      vServoWakeup();    
+      vServoWakeup();
+      
+      __FIRE_TO_HAROPANG(HAROPANG_ACTIVITY_GOOD_MORNING);    
       
       m_RoseMgr->RoseState_Mission1();
       return ROSE_MISSION_1_S;
@@ -270,7 +272,7 @@ extern void FftExit();
       byte val;
       int  sex;
        
-  //    DEBUG("Mission1\n");
+      DEBUG("Mission1\n");
    
       FftInit();
       
@@ -296,14 +298,19 @@ extern void FftExit();
                                       BeepPiPi();
                                       sex = Fftloop(); // during about 6 second.
                       
-                                      Serial.println("A");
-                                      Serial.println(sex);
+                                      //DEBUG("A");
+                                      //DEBUG(sex);
                                 }
                                 break;
                         case 0x31 :   // 
                                 {
                                     BeepPiPi();
                                     BeepPiPi();                                    
+ 
+                                    if(sex == 0)
+                                          __FIRE_TO_HAROPANG(HAROPANG_ACTIVITY_MAN);
+                                    else
+                                          __FIRE_TO_HAROPANG(HAROPANG_ACTIVITY_WOMAN);
  
 
                                     m_RoseMgr->RoseState_Mission2();
@@ -314,7 +321,7 @@ extern void FftExit();
                 }
                   
             } else {
-           //    Serial.println("timeout"); 
+           //    DEBUG("timeout"); 
                  m_RoseMgr->RoseState_Mission1();
                  st = ROSE_MISSION_1_S;
                  break; 
@@ -380,7 +387,7 @@ extern void HeartBitOnly();
                   }
                                
             } else {
-              Serial.println("timeout");
+              DEBUG("timeout");
               ServoDoriDori();
     
             }
@@ -400,9 +407,14 @@ extern void HeartBitOnly();
 
 extern void ServoASleep();
  ROSE_STATE_ID CRoseASleepState::Do(void) {
+  
+   DEBUG("ASleep");
+  
+   __FIRE_TO_HAROPANG(HAROPANG_ACTIVITY_GOOD_BYE);
    
    ServoASleep();
-   
+
+     
  //  m_RoseMgr->RoseState_Sleep();
  //  return ROSE_SLEEP_S;
      m_RoseMgr->RoseState_Ready();

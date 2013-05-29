@@ -230,7 +230,7 @@ MSG_STATUS ReceiveMessage(ID id, PCMD_PKT pkt, int ms)
 
 MSG_STATUS ReceiveSyncMessage(ID id, PSYNC_STRUCT pkt, int ms)
 {
-   Serial.println("TTT");
+   DEBUG("TTT");
    return xQueueReceive(hndSyncQueue[id], (PSYNC_STRUCT) pkt,( ms / portTICK_RATE_MS)); 
 }
 
@@ -454,7 +454,7 @@ void MeasureDistance(void)
     
     cm2 = (int(cm2 * 100.0)) / 100.0;  
     cm2 = abs(cm2);
-    Serial.println(cm2);
+    DEBUG(cm2);
     
     if(cm2 < 100) {
          FrontObject = 1; 

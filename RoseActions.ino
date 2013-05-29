@@ -112,7 +112,7 @@ void ServoHello(void)
 {
    int angle = 0;
    
-//   Serial.println("ServoAction");
+//   DEBUG("ServoAction");
     ServoOrigin(100,90);
  
      servo1.attach(ServoUpDown);
@@ -149,7 +149,7 @@ void ServoDoriDori(void)
 {
    int angle = 0;
    
-//   Serial.println("ServoAction");
+//   DEBUG("ServoAction");
     ServoOrigin(110,90);
  
      servo2.attach(ServoLeftRight);
@@ -190,7 +190,7 @@ void ServoYes(void)
 {
    int angle = 0;
    
-//   Serial.println("ServoAction");
+//   DEBUG("ServoAction");
     ServoOrigin(110,90);
  
      servo1.attach(ServoUpDown);
@@ -228,7 +228,7 @@ void ServoNo(void)
 {
    int angle = 0;
    
-//   Serial.println("ServoAction");
+//   DEBUG("ServoAction");
     ServoOrigin(110,90);
  
      servo2.attach(ServoLeftRight);
@@ -270,7 +270,7 @@ void vServoDozeoff()
 {
    int angle = 0;
    
-//   Serial.println("ServoAction");
+//   DEBUG("ServoAction");
     ServoOrigin(170,90);
  
      servo1.attach(ServoUpDown);
@@ -307,7 +307,7 @@ void vServoGlimpse(void)
 {
    int angle = 0;
  
-//   Serial.println("ServoAction");
+//   DEBUG("ServoAction");
    ServoOrigin(180,90);
    
    
@@ -395,16 +395,16 @@ int vCdsRecognition(void)
     
        
         startTime = xTaskGetTickCount();
-        DEBUG("startTime");
-        DEBUG(startTime);
+//        DEBUG("startTime");
+//        DEBUG(startTime);
         elapsedTime = 0;
         while( elapsedTime <  15000 ) 
         {
-              DEBUG("previous CDS");
+ //             DEBUG("previous CDS");
               cds = MeasureCds();
               
-              DEBUG("C");
-              DEBUG(cds);
+  //            DEBUG("C");
+  //            DEBUG(cds);
               
               if(cds < 30)
               {
@@ -431,7 +431,7 @@ int vCdsRecognition(void)
              ret = 0;
         }
           
-    DEBUG("exit CDS");
+ //   DEBUG("exit CDS");
 
         return ret;
         
@@ -454,7 +454,7 @@ float MeasureCds(void)
   
   val = analogRead(analPin);    // read the value from the sensor
   //val = 730;
-  DEBUG(val);
+ // DEBUG(val);
   x = map(val,0,1023,0,vcc);
   th = (((float)(vcc-x)*10.0)/(float)x)*1000.0;
   cds = ((log(4.0*th - 3000.0) / (-0.024119329) + 473)-32.0)/1.8;
