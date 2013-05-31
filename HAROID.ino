@@ -223,6 +223,11 @@ MSG_STATUS  SendMessage(ID id, PCMD_PKT cmdpkt)
    return ret;
 }
 
+MSG_STATUS ResetMessageQueue(ID id)
+{
+  xQueueReset(hndQueue[id]);
+}
+
 MSG_STATUS ReceiveMessage(ID id, PCMD_PKT pkt, int ms)
 {
    return xQueueReceive(hndQueue[id], (PCMD_PKT) pkt,( ms / portTICK_RATE_MS)); 
@@ -363,7 +368,7 @@ void setup() {
 #ifdef __USE_BLUETOOTH__
   s1 = xTaskCreate(BlueTooth_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 #else
-//  s1 = xTaskCreate(ETC_TASK, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  s1 = xTaskCreate(ETC_TASK, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);
 #endif
   
   s2 = xTaskCreate(ServoTask, NULL, configMINIMAL_STACK_SIZE+200, NULL, 1, NULL);
@@ -376,8 +381,8 @@ void setup() {
   hndQueue[BLUTOOTH_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
  if(hndQueue[BLUTOOTH_TASKID] == 0) {}
 #else
-//  hndQueue[ETC_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
-// if(hndQueue[ETC_TASKID] == 0) {}
+  hndQueue[ETC_TASKID] = xQueueCreate( 5, sizeof( CMD_PKT ) );
+ if(hndQueue[ETC_TASKID] == 0) {}
 #endif
 
     hndQueue[PROTOCAL_TASKID] = xQueueCreate( 5, sizeof( PROTOCAL_PKT) );
@@ -434,10 +439,14 @@ void MeasureDistance(void)
 {
   const int TrigPin = 2; 
   const int EchoPin = 3; 
+  int i;
+  int avg,count;
 
       // 1step , The ultra sonic sensor is used. 
-
-    
+  avg=0;
+  count=0;
+  for(i=0;i<5;i++)
+  {
     vTaskSuspendAll();
  
     digitalWrite(TrigPin, LOW);  
@@ -453,31 +462,77 @@ void MeasureDistance(void)
 
     
     cm2 = (int(cm2 * 100.0)) / 100.0;  
-    cm2 = abs(cm2);
-    DEBUG(cm2);
-    
-    if(cm2 < 100) {
-         FrontObject = 1; 
+    //cm2 = abs(cm2);
+    if(cm2 != 0 || (cm2 > 0 && cm2 < 250))
+    {
+        ++count;
+        avg += cm2;
+        DEBUG(cm2);
     }
+    //DEBUG(cm2);
+  }
+  
+  if(count != 0)
+  {
 
+      cm2 = avg/count;
+        if(cm2 < 100) {
+             FrontObject = 1; 
+        }
+  } else
+    FrontObject = 0;
+  
     
 
 }
 
 
+extern void adcInit();   
+extern void FftMusicloop();
+extern void adcExit();
 
+extern void ServoNature();
 
-/*
+byte gMusicFlag = 0;
+byte gServoNatureFlag = 0;
 static void ETC_TASK(void* arg) {
- 
-  
+
+  MSG_STATUS ret;
+  CMD_PKT etcpkt;
+      
   while(1) {
     
-    vTaskDelay(3000L / portTICK_RATE_MS);
+  
+    while(1)
+    {  
+       ret = ReceiveMessage(ETC_TASKID, &etcpkt, 5000 / portTICK_RATE_MS); 
+       if(ret == pdTRUE)
+       {
+            switch(etcpkt.cmd.SubCMD)
+            {
+              case 0x01:
+                      gMusicFlag = 1;
+                      FftInit();
+                      FftMusicloop();
+            //vTaskDelay(100L / portTICK_RATE_MS);
+                      FftExit();
+                      gMusicFlag = 0;
+                      break;
+              case 0x02:
+                     gServoNatureFlag = 1;
+                     ServoNature();
+                     //gServoNatureFlag = 0;
+              
+                      break;      
+            }        
+       }
+    }   
+    
+    //vTaskDelay(3000L / portTICK_RATE_MS);
 //    MeasureDistance();
   }
 
 }
-*/
+
 
 

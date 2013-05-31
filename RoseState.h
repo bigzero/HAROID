@@ -84,6 +84,30 @@ class CRoseMission2State : CRoseState
     ROSE_STATE_ID Do(void);
 };
 
+class CRoseGuardState : CRoseState
+{
+  public:
+    CRoseManager *m_RoseMgr;
+
+    //CPrefixState():CState(PREFIX_S) {};
+    CRoseGuardState(CRoseManager *mgr):CRoseState(ROSE_GUARD_S), m_RoseMgr(mgr)
+    {};
+    ~CRoseGuardState();
+    ROSE_STATE_ID Do(void);
+};
+
+class CRoseNatureState : CRoseState
+{
+  public:
+    CRoseManager *m_RoseMgr;
+
+    //CPrefixState():CState(PREFIX_S) {};
+    CRoseNatureState(CRoseManager *mgr):CRoseState(ROSE_NATURE_S), m_RoseMgr(mgr)
+    {};
+    ~CRoseNatureState();
+    ROSE_STATE_ID Do(void);
+};
+
 class CRoseASleepState : CRoseState
 {
   public:
@@ -113,10 +137,18 @@ class CRoseManager
   void RoseState_Wakeup();
   void RoseState_Mission1();
   void RoseState_Mission2();
+  void RoseState_Guard();
+  void RoseState_Nature();
   void RoseState_ASleep();
+  
+  
+  void SetGenus(int sex);
+  int  GetGenus(void);
    
   public:
     CRoseState *m_pState;
+    int m_genus;
+    
     void ChangeState(CRoseState* pNewState);
     
 };

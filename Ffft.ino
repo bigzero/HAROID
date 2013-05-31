@@ -10,7 +10,7 @@ volatile  long  zero = 0;
 int16_t capture[FFT_N];			/* Wave captureing buffer */
 complex_t bfly_buff[FFT_N];		/* FFT buffer */
 uint16_t spektrum[FFT_N/2];		/* Spectrum output buffer */
-uint16_t sex[4]; // 12,13,14,15
+uint16_t sex[5]; // 11,12,13,14,15
 
 
 byte __ADMUX__;
@@ -44,7 +44,7 @@ int Fftloop()
       
       startTime = xTaskGetTickCount();
       elapsedTime = 0;
-      while( elapsedTime <  6000 ) 
+      while( elapsedTime <  1500 ) 
       {
 
             if (position == FFT_N)
@@ -58,12 +58,13 @@ int Fftloop()
               }
           */
           
-            if(spektrum[0] > 100)
+            if(spektrum[0] > 80)
             {
                 sex[0] = spektrum[11] > 50 ? ++sex[0] : sex[0];
                 sex[1] = spektrum[12] > 50 ? ++sex[1] : sex[1];        
                 sex[2] = spektrum[13] > 50 ? ++sex[2] : sex[2];
                 sex[3] = spektrum[14] > 50 ? ++sex[3] : sex[3];
+                //sex[4] = spektrum[10] > 50 ? ++sex[4] : sex[4];
             }
             
              
@@ -73,8 +74,126 @@ int Fftloop()
             elapsedTime = (xTaskGetTickCount() - startTime)*portTICK_RATE_MS;
       }
       
+      Serial.println("SEX");
+      Serial.println(sex[0]+sex[1]+sex[2]+sex[3],HEX);
+      
       return (sex[0]+sex[1]+sex[2]+sex[3]);   
 }
+
+
+
+void ServoHeadbang(void)
+{
+    static byte flag = 1;
+    byte val;
+ 
+                 flag ^= 1;
+                 
+                 if(flag == 1)
+                 {
+                         HaroidIoControl(ME,
+                                           ETC_TASKID,
+                                           0x26, 
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           0,
+                                           &val,
+                                           NOSYNC);    
+                 } else {
+                   ResetMessageQueue(SERVO_TASKID);
+                 }
+                 
+                 
+  
+}
+
+//extern void MusicBumpBase(void);
+//extern void MusicBumpVocal(void);
+extern void MusicBump(void);
+extern byte gMusicFlag;
+void FftMusicloop()
+{
+        static unsigned long startTime;
+      static unsigned long elapsedTime;        
+      int i;
+      
+      for(i=0;i<4;i++)
+      {
+        sex[i] = 0;
+      }
+      
+      startTime = xTaskGetTickCount();
+      elapsedTime = 0;
+
+
+     // while( elapsedTime <  100000 )
+     while( 1) 
+      {
+        
+            if(gMusicFlag == 0)
+            {
+              ResetMessageQueue(SERVO_TASKID);
+              break;
+            }
+            
+            if (position == FFT_N)
+            {
+                    fft_input(capture, bfly_buff);
+                    fft_execute(bfly_buff);
+                    fft_output(bfly_buff, spektrum);
+                /*
+                    for (byte i = 0; i < 64; i++){
+                      Serial.write(spektrum[i]);
+                     
+                    }
+                */
+                
+
+                     // Serial.write(spektrum[i]);
+                     //MusicBump(spektrum[6], spektrum[11]);
+                     
+                  if(spektrum[6] > 40)
+                  {
+                    MusicBumpBase();
+                    ServoHeadbang();
+                  } 
+                  if(spektrum[11] > 40)
+                   MusicBumpVocal(); 
+                
+                  if(spektrum[0] > 80)
+                  {
+                      sex[0] = spektrum[0] > 50 ? ++sex[0] : sex[0];
+                      sex[1] = spektrum[1] > 50 ? ++sex[1] : sex[1];        
+                      sex[2] = spektrum[2] > 50 ? ++sex[2] : sex[2];
+                      sex[3] = spektrum[3] > 50 ? ++sex[3] : sex[3];
+                      //sex[4] = spektrum[10] > 50 ? ++sex[4] : sex[4];
+
+                  }
+            
+             
+                   position = 0;
+                   
+
+           
+
+            }
+            
+ 
+            
+
+
+//            vTaskDelay(100/ portTICK_RATE_MS);            
+           
+            
+            elapsedTime = (xTaskGetTickCount() - startTime)*portTICK_RATE_MS;
+      }
+      
+      
+     
+      
+}
+
 
 void establishContact() {
 /*

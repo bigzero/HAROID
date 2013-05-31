@@ -170,8 +170,10 @@ typedef struct tagPRTCL {
 typedef enum  STATE_ID {PREFIX_S, CMD_S, RSVD_S,SUBCMD_S,LENGTH_S,PAYLOAD_S, POSTFIX_S, COMPLETE_S, FAIL_S,
                                   SYNC_LENGTH_S, SYNC_PAYLOAD_S, SYNC_POSTFIX_S, SYNC_COMPLETE_S, SYNC_FAIL_S } PARSER_STATUS;
 
-typedef enum  ROSE_STATE_ID {ROSE_SLEEP_S, ROSE_READY_S, ROSE_WAKEUP_S, ROSE_MISSION_1_S, ROSE_MISSION_2_S , ROSE_ASLEEP_S} ROSE_STATUS;
+typedef enum  ROSE_STATE_ID {ROSE_SLEEP_S, ROSE_READY_S, ROSE_WAKEUP_S, ROSE_MISSION_1_S, ROSE_MISSION_2_S , ROSE_GUARD_S,ROSE_NATURE_S, ROSE_ASLEEP_S} ROSE_STATUS;
 
+#define ROSE_YOUNGBOY 0
+#define ROSE_OLDBOY   1
 
 extern "C" PARSER_STATUS Update(char pk) ;
 extern "C" COMMAND_STRUCT GetCommand(void);
@@ -184,6 +186,7 @@ extern "C" COMMAND_STRUCT GetCommand2(void);
 MSG_STATUS SendMessage(ID id, PCMD_PKT cmd);
 MSG_STATUS ReceiveMessage(ID id, PCMD_PKT pkt, int ms);
 MSG_STATUS ReceiveSyncMessage(ID id, PSYNC_STRUCT pkt, int ms);
+MSG_STATUS ResetMessageQueue(ID id);
 // 
 MSG_STATUS CompleteSyncMessage(ID id, PSYNC_STRUCT pkt);
 
@@ -238,6 +241,10 @@ MSG_STATUS HaroidIoControl(TO who,
 #define	b2		(0x04)					// Bit2.
 #define	b1		(0x02)					// Bit1.
 #define	b0		(0x01)					// Bit0.
+
+#define SERVO_SUNNY  0
+#define SERVO_WINDY  1
+#define SERVO_RAINY  2
 
 
 #endif

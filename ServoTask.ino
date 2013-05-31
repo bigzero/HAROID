@@ -221,6 +221,45 @@ ER vServoForward(PCMD_PKT src)
 }
 
 
+extern void ServoOrigin(int,int);
+ER vServoHeadbang(PCMD_PKT src)
+{
+   int angle = 0;
+   
+//   DEBUG("ServoAction");
+    ServoOrigin(120,90);
+ 
+     servo1.attach(ServoUpDown);
+    //servo1.write(110);
+    //delay(1000);
+    //vTaskDelay(1000 / portTICK_RATE_MS);
+
+  // down/up
+ 
+   for (angle = 120; angle < 140; angle++) {
+     servo1.write(angle);
+     //delay(35);
+     vTaskDelay(15 / portTICK_RATE_MS);
+   }
+ 
+   for (angle = 140; angle > 120; angle--) {
+     servo1.write(angle);
+     //delay(35);
+     vTaskDelay(100 / portTICK_RATE_MS);
+   }
+   
+
+    //   delay(1000);
+    //   delay(1000);
+  servo1.detach();
+//  servo2.detach();
+
+
+  //     vTaskDelay(500 / portTICK_RATE_MS);  
+   return pdTRUE;
+}
+
+
 
 CMD_PKT srvpkt;
 static void ServoTask(void* arg) {
